@@ -1,7 +1,27 @@
 /* ============================================================
    MINARI STUDIO — 과학송 아카이브 Design System
-   style.css  v2.0
+   style.css  v2.1
    ============================================================ */
+
+/* ── 0. Web Fonts ── */
+@font-face {
+  font-family: 'NanumSquareRound';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/NanumSquareRound.woff') format('woff');
+  font-weight: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'NanumSquareRound';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/NanumSquareRoundB.woff') format('woff');
+  font-weight: bold;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'NanumSquareRound';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/NanumSquareRoundEB.woff') format('woff');
+  font-weight: 800;
+  font-display: swap;
+}
 
 /* ── 1. CSS Variables ── */
 :root {
