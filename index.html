@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>과학송 아카이브 · MINARI STUDIO</title>
+  <link rel="icon" type="image/png" href="음표 아이콘.png" />
+  <meta name="description" content="수업 시작과 종료에 활용할 과학송을 학년별·단원별로 손쉽게 탐색하고 재생하는 교사용 웹앱입니다." />
+  <meta name="keywords" content="과학송, 과학 노래, 초등과학, 중학과학, 수업 도구, 미나리쌤" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&family=Noto+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- Pretendard -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+
+  <!-- BMJUA (배달의민족 주아) -->
+  <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet"/>
+
+  <!-- SortableJS for drag & drop -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ══════════════════════════════════
+       HEADER
+  ══════════════════════════════════ -->
+  <header class="app-header" id="appHeader">
+    <div class="header-left">
+      <span class="header-rabbit" aria-hidden="true">
+        <img src="음표 아이콘.png" alt="" width="40" height="40" style="object-fit:contain;" />
+      </span>
+      <div class="header-title-group">
+        <span class="header-title">과학송 아카이브</span>
+        <span class="header-subtitle">MINARI STUDIO · Science Songs</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <button class="btn-ghost" id="adminToggleBtn" onclick="openAdminLogin()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        관리자
+      </button>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════
+       MAIN LAYOUT
+  ══════════════════════════════════ -->
+  <div class="app-layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        <div class="sidebar-heading">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          학년 선택
+        </div>
+        <nav class="grade-nav" id="gradeNav" aria-label="학년 탭 네비게이션">
+          <!-- Grade tabs rendered by JS -->
+        </nav>
+
+        <div class="sidebar-stats" id="sidebarStats">
+          <!-- Stats rendered by JS -->
+        </div>
+      </div>
+    </aside>
+
+    <!-- Mobile Grade Tabs (horizontal scroll) -->
+    <div class="mobile-grade-bar" id="mobileGradeBar">
+      <!-- Mobile tabs by JS -->
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+
+      <!-- Page Title -->
+      <div class="page-title-area" id="pageTitleArea">
+        <div class="page-title-inner">
+          <span class="page-title-rabbit" aria-hidden="true">
+            <img src="음표 아이콘.png" alt="" width="46" height="46" style="object-fit:contain;" />
+          </span>
+          <h1 class="page-title" id="pageTitle">전체 과학송</h1>
+        </div>
+
+      </div>
+
+      <!-- Admin Mode Banner -->
+      <div class="admin-banner" id="adminBanner" style="display:none;">
+        <span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          관리자 모드 활성화 — 카드를 드래그하여 순서를 바꾸거나, 카드를 클릭하여 편집하세요.
+        </span>
+        <button class="btn-outline-sm" onclick="exitAdmin()">모드 종료</button>
+      </div>
+
+      <!-- Add Song Button (Admin only) -->
+      <div class="admin-add-row" id="adminAddRow" style="display:none;">
+        <button class="btn-primary" id="addSongBtn" onclick="openAddModal()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          과학송 추가
+        </button>
+      </div>
+
+      <!-- Cards Grid -->
+      <div class="cards-grid" id="cardsGrid">
+        <!-- Cards rendered by JS -->
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state" id="emptyState" style="display:none;">
+        <div class="empty-rabbit">
+          <img src="음표 아이콘.png" alt="" width="72" height="72" style="object-fit:contain; opacity:0.5;" />
+        </div>
+        <p class="empty-title">아직 등록된 과학송이 없어요</p>
+        <p class="empty-desc" id="emptyDesc">관리자 모드에서 과학송을 추가해 보세요!</p>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ══════════════════════════════════
+       FOOTER
+  ══════════════════════════════════ -->
+  <footer class="app-footer">
+    <span class="footer-rabbit" aria-hidden="true">
+      <img src="음표 아이콘.png" alt="" width="34" height="34" style="object-fit:contain;" />
+    </span>
+    <div class="footer-text">
+      <span class="footer-tag">Classroom Tools for Teachers · 과학송 아카이브</span>
+      <span class="footer-copy">© 2026 MINARI STUDIO · Science Song Archive Web App v1.0</span>
+    </div>
+  </footer>
+
+  <!-- ══════════════════════════════════
+       MODALS
+  ══════════════════════════════════ -->
+
+  <!-- Admin Login Modal -->
+  <div class="modal-overlay" id="adminLoginModal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="adminLoginTitle">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title-row">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--point-deep)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <h2 class="modal-title" id="adminLoginTitle">관리자 인증</h2>
+        </div>
+        <button class="modal-close" onclick="closeModal('adminLoginModal')" aria-label="닫기">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">관리자 비밀번호를 입력하세요.</p>
+        <div class="form-group">
+          <label class="form-label" for="adminPasswordInput">비밀번호</label>
+          <input type="password" id="adminPasswordInput" class="form-input" placeholder="비밀번호 입력"
+            onkeydown="if(event.key==='Enter') verifyAdmin()" />
+          <p class="form-error" id="adminError" style="display:none;">❌ 비밀번호가 올바르지 않습니다.</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" onclick="closeModal('adminLoginModal')">취소</button>
+        <button class="btn-primary" onclick="verifyAdmin()">로그인</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add / Edit Song Modal -->
+  <div class="modal-overlay" id="songModal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="songModalTitle">
+    <div class="modal-box modal-box--wide">
+      <div class="modal-header">
+        <div class="modal-title-row">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--point-deep)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          <h2 class="modal-title" id="songModalTitle">과학송 추가</h2>
+        </div>
+        <button class="modal-close" onclick="closeModal('songModal')" aria-label="닫기">✕</button>
+      </div>
+      <div class="modal-body">
+
+        <!-- YouTube URL -->
+        <div class="form-group">
+          <label class="form-label" for="songYoutubeUrl">유튜브 URL <span class="form-required">*</span></label>
+          <div class="url-input-row">
+            <input type="url" id="songYoutubeUrl" class="form-input" placeholder="https://www.youtube.com/watch?v=..." />
+            <button class="btn-outline" id="fetchThumbBtn" onclick="fetchYoutubeThumbnail()">썸네일 가져오기</button>
+          </div>
+          <p class="form-hint">YouTube 링크를 입력하면 썸네일이 자동으로 추출됩니다.</p>
+        </div>
+
+        <!-- Thumbnail Preview -->
+        <div class="thumb-preview-area" id="thumbPreviewArea" style="display:none;">
+          <img id="thumbPreviewImg" src="" alt="썸네일 미리보기" class="thumb-preview-img" />
+          <button class="thumb-clear-btn" onclick="clearThumbnail()" title="썸네일 지우기">✕</button>
+        </div>
+
+        <!-- Song Title -->
+        <div class="form-group">
+          <label class="form-label" for="songTitle">노래 제목 <span class="form-required">*</span></label>
+          <input type="text" id="songTitle" class="form-input" placeholder="예: 물질의 구성 과학송" />
+        </div>
+
+        <!-- Grade -->
+        <div class="form-group">
+          <label class="form-label" for="songGrade">학년 <span class="form-required">*</span></label>
+          <select id="songGrade" class="form-select">
+            <option value="">학년 선택...</option>
+          </select>
+        </div>
+
+        <!-- Tags -->
+        <div class="form-group">
+          <label class="form-label" for="songTagInput">단원/태그</label>
+          <div class="tag-input-wrapper">
+            <div class="tag-list" id="tagList"></div>
+            <input type="text" id="songTagInput" class="tag-input" placeholder="태그 입력 후 Enter (예: 물질의구성)" onkeydown="handleTagInput(event)" />
+          </div>
+          <p class="form-hint">Enter 또는 쉼표로 태그를 추가하세요.</p>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" onclick="closeModal('songModal')">취소</button>
+        <button class="btn-danger" id="deleteSongBtn" onclick="deleteSong()" style="display:none;">삭제</button>
+        <button class="btn-primary" id="saveSongBtn" onclick="saveSong()">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grade Manager Modal -->
+  <div class="modal-overlay" id="gradeModal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="gradeModalTitle">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title-row">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--point-deep)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <h2 class="modal-title" id="gradeModalTitle">학년 관리</h2>
+        </div>
+        <button class="modal-close" onclick="closeModal('gradeModal')" aria-label="닫기">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">학년 탭을 추가하거나 삭제할 수 있습니다.</p>
+        <ul class="grade-manage-list" id="gradeManageList"></ul>
+        <div class="form-group" style="margin-top:16px;">
+          <label class="form-label" for="newGradeInput">새 학년 추가</label>
+          <div class="url-input-row">
+            <input type="text" id="newGradeInput" class="form-input" placeholder="예: 4학년" onkeydown="if(event.key==='Enter') addGrade()" />
+            <button class="btn-outline" onclick="addGrade()">추가</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-primary" onclick="closeModal('gradeModal')">완료</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Video Player Modal -->
+  <div class="modal-overlay" id="playerModal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="playerModalTitle">
+    <div class="modal-box modal-box--player">
+      <div class="modal-header">
+        <div class="modal-title-row">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--point-deep)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+          <h2 class="modal-title" id="playerModalTitle">과학송 재생</h2>
+        </div>
+        <button class="modal-close" onclick="closePlayer()" aria-label="닫기">✕</button>
+      </div>
+      <div class="modal-body player-body">
+        <div class="youtube-embed-wrap" id="youtubeEmbedWrap">
+          <iframe id="youtubeIframe" src="" frameborder="0" allowfullscreen
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            title="과학송 유튜브 영상"></iframe>
+        </div>
+        <div class="player-info" id="playerInfo"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+# Node
+node_modules/
+npm-debug.log*
+
+# Firebase
+.firebase/
+firebase-debug.log
+
+# Vercel
+.vercel/
+
+# OS
+.DS_Store
+Thumbs.db
