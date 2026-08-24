@@ -1,47 +1,48 @@
 /* ============================================================
-   app.js — 과학송 아카이브 메인 로직  v2.0
+   app.js ??과학???�카?�브 메인 로직  v2.0
    ============================================================ */
 
 'use strict';
 
-// ══════════════════════════════════════════════════════
+// ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
 // 1. CONSTANTS & STATE
-// ══════════════════════════════════════════════════════
+// ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
 const STORAGE_KEY = 'scienceSongArchive_v2';
-const ADMIN_PW    = 'minah';
+// 관리자 ?�증: SHA-256 ?�시�??�??(?�스 ?�출??비�?번호 보호)
+const ADMIN_HASH = 'ad5f52f58ed6ec6e7a641f2416f347674ac5933470079f2a18bc6269b1e80796';
 
-// ── 기본 과학송 데이터 ──
+// ?�?� 기본 과학???�이???�?�
 const DEFAULT_SONGS = [
-  /* ── 중2 ── */
-  { id:'s01', grade:'중2', title:'원소기호송',              youtubeUrl:'https://www.youtube.com/watch?v=w2TJ1RBsiK0', videoId:'w2TJ1RBsiK0', thumbnail:'https://img.youtube.com/vi/w2TJ1RBsiK0/hqdefault.jpg', tags:['1단원','물질의구성'],         order:0  },
-  { id:'s02', grade:'중2', title:'이온송',                  youtubeUrl:'https://www.youtube.com/watch?v=ScxLD5UEoMA', videoId:'ScxLD5UEoMA', thumbnail:'https://img.youtube.com/vi/ScxLD5UEoMA/hqdefault.jpg', tags:['1단원','물질의구성'],         order:1  },
-  { id:'s03', grade:'중2', title:'자기력송',                youtubeUrl:'https://www.youtube.com/watch?v=2110PW3rkJw', videoId:'2110PW3rkJw', thumbnail:'https://img.youtube.com/vi/2110PW3rkJw/hqdefault.jpg', tags:['2단원','전기와자기'],         order:2  },
-  { id:'s04', grade:'중2', title:'태양계송',                youtubeUrl:'https://youtu.be/gmJ8RvIQiQc',                videoId:'gmJ8RvIQiQc', thumbnail:'https://img.youtube.com/vi/gmJ8RvIQiQc/hqdefault.jpg', tags:['3단원','태양계'],             order:3  },
-  { id:'s05', grade:'중2', title:'광합성송',                youtubeUrl:'https://www.youtube.com/watch?v=P8cGGja3sHo', videoId:'P8cGGja3sHo', thumbnail:'https://img.youtube.com/vi/P8cGGja3sHo/hqdefault.jpg', tags:['4단원','식물과에너지'],        order:4  },
-  { id:'s06', grade:'중2', title:'소화 순환 호흡 배설송',   youtubeUrl:'https://youtu.be/DO7W9upASOY',                videoId:'DO7W9upASOY', thumbnail:'https://img.youtube.com/vi/DO7W9upASOY/hqdefault.jpg', tags:['5단원','동물과에너지'],        order:5  },
-  { id:'s07', grade:'중2', title:'소화기관송',              youtubeUrl:'https://youtu.be/3adIvbguytc',                videoId:'3adIvbguytc', thumbnail:'https://img.youtube.com/vi/3adIvbguytc/hqdefault.jpg', tags:['5단원','동물과에너지'],        order:6  },
-  { id:'s08', grade:'중2', title:'물질의 특성송',           youtubeUrl:'https://youtu.be/M3sufHqzpL4',                videoId:'M3sufHqzpL4', thumbnail:'https://img.youtube.com/vi/M3sufHqzpL4/hqdefault.jpg', tags:['6단원','물질의특성'],          order:7  },
-  { id:'s09', grade:'중2', title:'해수의 순환송',           youtubeUrl:'https://youtu.be/S__Iees0hHo',                videoId:'S__Iees0hHo', thumbnail:'https://img.youtube.com/vi/S__Iees0hHo/hqdefault.jpg', tags:['7단원','수권과해수의순환'],     order:8  },
-  { id:'s10', grade:'중2', title:'수권의 구성과 해수송',    youtubeUrl:'https://youtu.be/wUkOtZdeQOQ',               videoId:'wUkOtZdeQOQ', thumbnail:'https://img.youtube.com/vi/wUkOtZdeQOQ/hqdefault.jpg', tags:['7단원','수권과해수의순환'],     order:9  },
-  { id:'s11', grade:'중2', title:'열과 우리 생활송',        youtubeUrl:'https://youtu.be/Vx_J5q2aAmg',               videoId:'Vx_J5q2aAmg', thumbnail:'https://img.youtube.com/vi/Vx_J5q2aAmg/hqdefault.jpg', tags:['8단원','열과우리생활'],         order:10 },
-  { id:'s12', grade:'중2', title:'열의 이동과 비열송',      youtubeUrl:'https://youtu.be/u5doBPQlgPg',               videoId:'u5doBPQlgPg', thumbnail:'https://img.youtube.com/vi/u5doBPQlgPg/hqdefault.jpg', tags:['8단원','열과우리생활'],         order:11 },
-  /* ── 중1 ── */
-  { id:'s13', grade:'중1', title:'지구계송',                youtubeUrl:'https://youtu.be/y4Zq3pB529A',               videoId:'y4Zq3pB529A', thumbnail:'https://img.youtube.com/vi/y4Zq3pB529A/hqdefault.jpg', tags:['1단원','지권의변화'],          order:12 },
-  { id:'s14', grade:'중1', title:'암석송',                  youtubeUrl:'https://www.youtube.com/watch?v=YNalQ0fOyVw', videoId:'YNalQ0fOyVw', thumbnail:'https://img.youtube.com/vi/YNalQ0fOyVw/hqdefault.jpg', tags:['1단원','지권의변화'],          order:13 },
-  { id:'s15', grade:'중1', title:'광물송',                  youtubeUrl:'https://youtu.be/-H5uBoLp4CE',               videoId:'-H5uBoLp4CE', thumbnail:'https://img.youtube.com/vi/-H5uBoLp4CE/hqdefault.jpg', tags:['1단원','지권의변화'],          order:14 },
-  { id:'s16', grade:'중1', title:'여러 가지 힘송',          youtubeUrl:'https://youtu.be/_vAn-w2YbLg',               videoId:'_vAn-w2YbLg', thumbnail:'https://img.youtube.com/vi/_vAn-w2YbLg/hqdefault.jpg', tags:['2단원','여러가지힘'],          order:15 },
-  { id:'s17', grade:'중1', title:'생물 다양성송',           youtubeUrl:'https://youtu.be/RvIAFg_dQu4',               videoId:'RvIAFg_dQu4', thumbnail:'https://img.youtube.com/vi/RvIAFg_dQu4/hqdefault.jpg', tags:['3단원','생물의다양성'],         order:16 },
-  { id:'s18', grade:'중1', title:'기체의 성질송',           youtubeUrl:'https://www.youtube.com/watch?v=nDiXiCdIKIQ', videoId:'nDiXiCdIKIQ', thumbnail:'https://img.youtube.com/vi/nDiXiCdIKIQ/hqdefault.jpg', tags:['4단원','기체의성질'],          order:17 },
-  { id:'s19', grade:'중1', title:'분자 배열송 (상태변화송)', youtubeUrl:'https://www.youtube.com/watch?v=ekN9KcXRGMw', videoId:'ekN9KcXRGMw', thumbnail:'https://img.youtube.com/vi/ekN9KcXRGMw/hqdefault.jpg', tags:['5단원','물질의상태변화'],  order:18 },
-  { id:'s20', grade:'중1', title:'파동송',                  youtubeUrl:'https://www.youtube.com/watch?v=DpBDJlEB5V4', videoId:'DpBDJlEB5V4', thumbnail:'https://img.youtube.com/vi/DpBDJlEB5V4/hqdefault.jpg', tags:['6단원','빛과파동'],            order:19 },
+  /* ?�?� �? ?�?� */
+  { id:'s01', grade:'�?', title:'?�소기호??,              youtubeUrl:'https://www.youtube.com/watch?v=w2TJ1RBsiK0', videoId:'w2TJ1RBsiK0', thumbnail:'https://img.youtube.com/vi/w2TJ1RBsiK0/hqdefault.jpg', tags:['1?�원','물질?�구??],         order:0  },
+  { id:'s02', grade:'�?', title:'?�온??,                  youtubeUrl:'https://www.youtube.com/watch?v=ScxLD5UEoMA', videoId:'ScxLD5UEoMA', thumbnail:'https://img.youtube.com/vi/ScxLD5UEoMA/hqdefault.jpg', tags:['1?�원','물질?�구??],         order:1  },
+  { id:'s03', grade:'�?', title:'?�기?�송',                youtubeUrl:'https://www.youtube.com/watch?v=2110PW3rkJw', videoId:'2110PW3rkJw', thumbnail:'https://img.youtube.com/vi/2110PW3rkJw/hqdefault.jpg', tags:['2?�원','?�기?�?�기'],         order:2  },
+  { id:'s04', grade:'�?', title:'?�양계송',                youtubeUrl:'https://youtu.be/gmJ8RvIQiQc',                videoId:'gmJ8RvIQiQc', thumbnail:'https://img.youtube.com/vi/gmJ8RvIQiQc/hqdefault.jpg', tags:['3?�원','?�양�?],             order:3  },
+  { id:'s05', grade:'�?', title:'광합?�송',                youtubeUrl:'https://www.youtube.com/watch?v=P8cGGja3sHo', videoId:'P8cGGja3sHo', thumbnail:'https://img.youtube.com/vi/P8cGGja3sHo/hqdefault.jpg', tags:['4?�원','?�물과에?��?'],        order:4  },
+  { id:'s06', grade:'�?', title:'?�화 ?�환 ?�흡 배설??,   youtubeUrl:'https://youtu.be/DO7W9upASOY',                videoId:'DO7W9upASOY', thumbnail:'https://img.youtube.com/vi/DO7W9upASOY/hqdefault.jpg', tags:['5?�원','?�물과에?��?'],        order:5  },
+  { id:'s07', grade:'�?', title:'?�화기�???,              youtubeUrl:'https://youtu.be/3adIvbguytc',                videoId:'3adIvbguytc', thumbnail:'https://img.youtube.com/vi/3adIvbguytc/hqdefault.jpg', tags:['5?�원','?�물과에?��?'],        order:6  },
+  { id:'s08', grade:'�?', title:'물질???�성??,           youtubeUrl:'https://youtu.be/M3sufHqzpL4',                videoId:'M3sufHqzpL4', thumbnail:'https://img.youtube.com/vi/M3sufHqzpL4/hqdefault.jpg', tags:['6?�원','물질?�특??],          order:7  },
+  { id:'s09', grade:'�?', title:'?�수???�환??,           youtubeUrl:'https://youtu.be/S__Iees0hHo',                videoId:'S__Iees0hHo', thumbnail:'https://img.youtube.com/vi/S__Iees0hHo/hqdefault.jpg', tags:['7?�원','?�권과해?�의?�환'],     order:8  },
+  { id:'s10', grade:'�?', title:'?�권??구성�??�수??,    youtubeUrl:'https://youtu.be/wUkOtZdeQOQ',               videoId:'wUkOtZdeQOQ', thumbnail:'https://img.youtube.com/vi/wUkOtZdeQOQ/hqdefault.jpg', tags:['7?�원','?�권과해?�의?�환'],     order:9  },
+  { id:'s11', grade:'�?', title:'?�과 ?�리 ?�활??,        youtubeUrl:'https://youtu.be/Vx_J5q2aAmg',               videoId:'Vx_J5q2aAmg', thumbnail:'https://img.youtube.com/vi/Vx_J5q2aAmg/hqdefault.jpg', tags:['8?�원','?�과?�리?�활'],         order:10 },
+  { id:'s12', grade:'�?', title:'?�의 ?�동�?비열??,      youtubeUrl:'https://youtu.be/u5doBPQlgPg',               videoId:'u5doBPQlgPg', thumbnail:'https://img.youtube.com/vi/u5doBPQlgPg/hqdefault.jpg', tags:['8?�원','?�과?�리?�활'],         order:11 },
+  /* ?�?� �? ?�?� */
+  { id:'s13', grade:'�?', title:'지구계??,                youtubeUrl:'https://youtu.be/y4Zq3pB529A',               videoId:'y4Zq3pB529A', thumbnail:'https://img.youtube.com/vi/y4Zq3pB529A/hqdefault.jpg', tags:['1?�원','지권의변??],          order:12 },
+  { id:'s14', grade:'�?', title:'?�석??,                  youtubeUrl:'https://www.youtube.com/watch?v=YNalQ0fOyVw', videoId:'YNalQ0fOyVw', thumbnail:'https://img.youtube.com/vi/YNalQ0fOyVw/hqdefault.jpg', tags:['1?�원','지권의변??],          order:13 },
+  { id:'s15', grade:'�?', title:'광물??,                  youtubeUrl:'https://youtu.be/-H5uBoLp4CE',               videoId:'-H5uBoLp4CE', thumbnail:'https://img.youtube.com/vi/-H5uBoLp4CE/hqdefault.jpg', tags:['1?�원','지권의변??],          order:14 },
+  { id:'s16', grade:'�?', title:'?�러 가지 ?�송',          youtubeUrl:'https://youtu.be/_vAn-w2YbLg',               videoId:'_vAn-w2YbLg', thumbnail:'https://img.youtube.com/vi/_vAn-w2YbLg/hqdefault.jpg', tags:['2?�원','?�러가지??],          order:15 },
+  { id:'s17', grade:'�?', title:'?�물 ?�양?�송',           youtubeUrl:'https://youtu.be/RvIAFg_dQu4',               videoId:'RvIAFg_dQu4', thumbnail:'https://img.youtube.com/vi/RvIAFg_dQu4/hqdefault.jpg', tags:['3?�원','?�물?�다?�성'],         order:16 },
+  { id:'s18', grade:'�?', title:'기체???�질??,           youtubeUrl:'https://www.youtube.com/watch?v=nDiXiCdIKIQ', videoId:'nDiXiCdIKIQ', thumbnail:'https://img.youtube.com/vi/nDiXiCdIKIQ/hqdefault.jpg', tags:['4?�원','기체?�성�?],          order:17 },
+  { id:'s19', grade:'�?', title:'분자 배열??(?�태변?�송)', youtubeUrl:'https://www.youtube.com/watch?v=ekN9KcXRGMw', videoId:'ekN9KcXRGMw', thumbnail:'https://img.youtube.com/vi/ekN9KcXRGMw/hqdefault.jpg', tags:['5?�원','물질?�상?��???],  order:18 },
+  { id:'s20', grade:'�?', title:'?�동??,                  youtubeUrl:'https://www.youtube.com/watch?v=DpBDJlEB5V4', videoId:'DpBDJlEB5V4', thumbnail:'https://img.youtube.com/vi/DpBDJlEB5V4/hqdefault.jpg', tags:['6?�원','빛과?�동'],            order:19 },
 ];
 
-const DEFAULT_GRADES = ['전체', '중1', '중2', '중3'];
+const DEFAULT_GRADES = ['?�체', '�?', '�?', '�?'];
 
 let state = {
   grades:       [...DEFAULT_GRADES],
   songs:        DEFAULT_SONGS.map(s => ({ ...s, locked: false })),
-  currentGrade: '전체',
+  currentGrade: '?�체',
   isAdmin:      false,
   editingId:    null,
   currentTags:  [],
@@ -50,21 +51,20 @@ let state = {
 
 let sortableInstance = null;
 
-// ── 태그 색상 팔레트 ──
+// ?�?� ?�그 ?�상 ?�레???�?�
 const UNIT_COLORS = [
-  { bg: '#FDE8EF', border: '#F1B8CB', text: '#9B3A60' }, // 1단원 — 로즈
-  { bg: '#EDE5F8', border: '#C9AEED', text: '#6B3A9B' }, // 2단원 — 라벤더
-  { bg: '#D5F0EC', border: '#9DD4CC', text: '#2A7A6E' }, // 3단원 — 민트
-  { bg: '#FEF0E0', border: '#F9C88A', text: '#9B5A1A' }, // 4단원 — 피치
-  { bg: '#DCE8F8', border: '#9CC2E8', text: '#1A4E8C' }, // 5단원 — 블루
-  { bg: '#E2F5D8', border: '#AADCA0', text: '#3A7A1A' }, // 6단원 — 그린
-  { bg: '#FEF8DC', border: '#F0DC8A', text: '#7A6010' }, // 7단원 — 앰버
-  { bg: '#FFE8DC', border: '#FFBBAA', text: '#8C2A1A' }, // 8단원 — 코랄
+  { bg: '#FDE8EF', border: '#F1B8CB', text: '#9B3A60' }, // 1?�원 ??로즈
+  { bg: '#EDE5F8', border: '#C9AEED', text: '#6B3A9B' }, // 2?�원 ???�벤??  { bg: '#D5F0EC', border: '#9DD4CC', text: '#2A7A6E' }, // 3?�원 ??민트
+  { bg: '#FEF0E0', border: '#F9C88A', text: '#9B5A1A' }, // 4?�원 ???�치
+  { bg: '#DCE8F8', border: '#9CC2E8', text: '#1A4E8C' }, // 5?�원 ??블루
+  { bg: '#E2F5D8', border: '#AADCA0', text: '#3A7A1A' }, // 6?�원 ??그린
+  { bg: '#FEF8DC', border: '#F0DC8A', text: '#7A6010' }, // 7?�원 ???�버
+  { bg: '#FFE8DC', border: '#FFBBAA', text: '#8C2A1A' }, // 8?�원 ??코랄
 ];
 const CONTENT_TAG_COLOR = { bg: '#EEE5F5', border: '#CDB0DC', text: '#6A3578' };
 
 function getTagColor(tag) {
-  const m = tag.match(/^(\d+)단원$/);
+  const m = tag.match(/^(\d+)?�원$/);
   if (m) {
     const idx = Math.max(0, parseInt(m[1]) - 1) % UNIT_COLORS.length;
     return UNIT_COLORS[idx];
@@ -75,15 +75,15 @@ function getTagColor(tag) {
 function getUnitNumber(song) {
   if (!song.tags) return 999;
   for (const tag of song.tags) {
-    const m = tag.match(/^(\d+)단원$/);
+    const m = tag.match(/^(\d+)?�원$/);
     if (m) return parseInt(m[1]);
   }
   return 999;
 }
 
-// ══════════════════════════════════════════════════════
+// ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
 // 2. PERSISTENCE
-// ══════════════════════════════════════════════════════
+// ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
 function saveState() {
   const toSave = { grades: state.grades, songs: state.songs };
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave)); } catch(e) {}
@@ -96,15 +96,15 @@ function loadState() {
     const saved = JSON.parse(raw);
     if (saved.grades && Array.isArray(saved.grades)) state.grades = saved.grades;
     if (saved.songs  && Array.isArray(saved.songs)) {
-      // locked 필드 기본값 보장
+      // locked ?�드 기본�?보장
       state.songs = saved.songs.map(s => ({ locked: false, ...s }));
     }
   } catch(e) {}
 }
 
-// ══════════════════════════════════════════════════════
+// ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
 // 3. UTILS
-// ══════════════════════════════════════════════════════
+// ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
 function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
@@ -138,9 +138,9 @@ function escapeHtml(str = '') {
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ══════════════════════════════════════════════════════
+// ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
 // 4. SORT
-// ══════════════════════════════════════════════════════
+// ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
 function setSortBy(sortType) {
   state.sortBy = sortType;
   ['default', 'unit', 'title'].forEach(t => {
@@ -152,7 +152,7 @@ function setSortBy(sortType) {
 
 function getFilteredSongs() {
   let songs = [...state.songs];
-  if (state.currentGrade !== '전체') {
+  if (state.currentGrade !== '?�체') {
     songs = songs.filter(s => s.grade === state.currentGrade);
   }
 
@@ -175,9 +175,9 @@ function getFilteredSongs() {
   return songs;
 }
 
-// ══════════════════════════════════════════════════════
+// ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
 // 5. RENDER HELPERS
-// ══════════════════════════════════════════════════════
+// ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
 function renderGradeTabs() {
   const nav    = document.getElementById('gradeNav');
   const mobile = document.getElementById('mobileGradeBar');
@@ -185,19 +185,19 @@ function renderGradeTabs() {
   mobile.innerHTML = '';
 
   state.grades.forEach(grade => {
-    const gradeSongs = grade === '전체' ? state.songs : state.songs.filter(s => s.grade === grade);
+    const gradeSongs = grade === '?�체' ? state.songs : state.songs.filter(s => s.grade === grade);
     const count = gradeSongs.length;
     const isAllLocked = count > 0 && gradeSongs.every(s => s.locked);
     const lockedCount = gradeSongs.filter(s => s.locked).length;
 
-    // ── Desktop tab ──
+    // ?�?� Desktop tab ?�?�
     const btn = document.createElement('button');
     btn.className = 'grade-tab' + (grade === state.currentGrade ? ' active' : '');
     btn.setAttribute('aria-current', grade === state.currentGrade ? 'page' : 'false');
     btn.dataset.grade = grade;
 
     if (state.isAdmin) {
-      const lockTitle = isAllLocked ? '전체 잠금 해제' : '전체 잠금';
+      const lockTitle = isAllLocked ? '?�체 ?�금 ?�제' : '?�체 ?�금';
       const lockIcon  = isAllLocked
         ? `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`
         : `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>`;
@@ -213,8 +213,7 @@ function renderGradeTabs() {
           </button>
         </span>
       `;
-      // 잠금 버튼 클릭 이벤트
-      btn.querySelector('.tab-lock-btn').addEventListener('click', e => {
+      // ?�금 버튼 ?�릭 ?�벤??      btn.querySelector('.tab-lock-btn').addEventListener('click', e => {
         e.stopPropagation();
         toggleGradeLock(grade, !isAllLocked);
       });
@@ -225,12 +224,12 @@ function renderGradeTabs() {
     btn.addEventListener('click', () => selectGrade(grade));
     nav.appendChild(btn);
 
-    // ── Mobile tab ──
+    // ?�?� Mobile tab ?�?�
     const mBtn = document.createElement('button');
     mBtn.className = 'mobile-grade-tab' + (grade === state.currentGrade ? ' active' : '');
     mBtn.dataset.grade = grade;
     if (state.isAdmin && lockedCount > 0) {
-      mBtn.innerHTML = `${escapeHtml(grade)} <span style="font-size:10px;opacity:0.8;">🔒${lockedCount > 0 && lockedCount < count ? lockedCount : ''}</span>`;
+      mBtn.innerHTML = `${escapeHtml(grade)} <span style="font-size:10px;opacity:0.8;">?��${lockedCount > 0 && lockedCount < count ? lockedCount : ''}</span>`;
     } else {
       mBtn.textContent = grade;
     }
@@ -238,7 +237,7 @@ function renderGradeTabs() {
     mobile.appendChild(mBtn);
   });
 
-  // ── Admin: 학년 관리 버튼 ──
+  // ?�?� Admin: ?�년 관�?버튼 ?�?�
   if (state.isAdmin) {
     const sep = document.createElement('div');
     sep.style.cssText = 'border-top:1px solid var(--line); margin: 10px 0 6px;';
@@ -253,8 +252,7 @@ function renderGradeTabs() {
           <circle cx="12" cy="12" r="3"/>
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
         </svg>
-        학년 관리
-      </span>
+        ?�년 관�?      </span>
     `;
     manageBtn.addEventListener('click', openGradeModal);
     nav.appendChild(manageBtn);
@@ -264,34 +262,34 @@ function renderGradeTabs() {
 function renderSidebarStats() {
   const el = document.getElementById('sidebarStats');
   const total      = state.songs.length;
-  const gradeCount = state.grades.filter(g => g !== '전체').length;
-  el.innerHTML = `<strong>${total}</strong>개 과학송<br>${gradeCount}개 학년 운영 중`;
+  const gradeCount = state.grades.filter(g => g !== '?�체').length;
+  el.innerHTML = `<strong>${total}</strong>�?과학??br>${gradeCount}�??�년 ?�영 �?;
 }
 
 function renderPageTitle() {
   const area  = document.getElementById('pageTitleArea');
   const grade = state.currentGrade;
 
-  if (grade === '전체') {
+  if (grade === '?�체') {
     const total    = state.songs.length;
     const chipsHtml = state.grades
-      .filter(g => g !== '전체')
+      .filter(g => g !== '?�체')
       .map(g => {
         const cnt = state.songs.filter(s => s.grade === g).length;
         if (!cnt) return '';
-        return `<span class="title-grade-chip">${escapeHtml(g)} <strong>${cnt}</strong>곡</span>`;
+        return `<span class="title-grade-chip">${escapeHtml(g)} <strong>${cnt}</strong>�?/span>`;
       })
       .filter(Boolean).join('');
 
     area.innerHTML = `
       <div class="page-title-inner">
         <span class="page-title-rabbit" aria-hidden="true">
-          <img src="favicon.svg" alt="" width="44" height="44" style="object-fit:contain;" />
+          <img src="��ǥ ������.png" alt="" width="44" height="44" style="object-fit:contain;" />
         </span>
         <div>
-          <h1 class="page-title">전체 과학송</h1>
+          <h1 class="page-title">?�체 과학??/h1>
           <div class="page-title-meta">
-            <span class="page-total-badge">총 ${total}곡</span>
+            <span class="page-total-badge">�?${total}�?/span>
             ${chipsHtml}
           </div>
         </div>
@@ -301,11 +299,11 @@ function renderPageTitle() {
     const songs = state.songs.filter(s => s.grade === grade);
     const total = songs.length;
 
-    // 단원 분포 계산
+    // ?�원 분포 계산
     const unitMap = {};
     songs.forEach(s => {
       (s.tags || []).forEach(t => {
-        if (/^\d+단원$/.test(t)) unitMap[t] = (unitMap[t] || 0) + 1;
+        if (/^\d+?�원$/.test(t)) unitMap[t] = (unitMap[t] || 0) + 1;
       });
     });
 
@@ -313,18 +311,18 @@ function renderPageTitle() {
       .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
       .map(([unit, cnt]) => {
         const c = getTagColor(unit);
-        return `<span class="title-unit-chip" style="background:${c.bg};border-color:${c.border};color:${c.text}">${escapeHtml(unit)} ${cnt}곡</span>`;
+        return `<span class="title-unit-chip" style="background:${c.bg};border-color:${c.border};color:${c.text}">${escapeHtml(unit)} ${cnt}�?/span>`;
       }).join('');
 
     area.innerHTML = `
       <div class="page-title-banner">
         <div class="page-title-banner-main">
           <span class="page-title-rabbit" aria-hidden="true">
-            <img src="favicon.svg" alt="" width="38" height="38" style="object-fit:contain;" />
+            <img src="��ǥ ������.png" alt="" width="38" height="38" style="object-fit:contain;" />
           </span>
           <div>
-            <h1 class="page-title">${escapeHtml(grade)} 과학송</h1>
-            <p class="page-title-count">총 <strong>${total}</strong>곡</p>
+            <h1 class="page-title">${escapeHtml(grade)} 과학??/h1>
+            <p class="page-title-count">�?<strong>${total}</strong>�?/p>
           </div>
         </div>
         ${unitsHtml ? `<div class="page-title-units">${unitsHtml}</div>` : ''}
@@ -360,17 +358,17 @@ function createCardElement(song, idx) {
   card.dataset.id = song.id;
   card.style.animationDelay = `${idx * 0.04}s`;
 
-  // 썸네일 HTML
+  // ?�네??HTML
   const thumbHtml = song.thumbnail
-    ? `<img class="card-thumb" src="${song.thumbnail}" alt="${escapeHtml(song.title)} 썸네일"
-           onerror="this.outerHTML=\`<div class='thumb-fallback'><img src='favicon.svg' alt='' /><span>썸네일 없음</span></div>\`"
+    ? `<img class="card-thumb" src="${song.thumbnail}" alt="${escapeHtml(song.title)} ?�네??
+           onerror="this.outerHTML=\`<div class='thumb-fallback'><img src='��ǥ ������.png' alt='' /><span>?�네???�음</span></div>\`"
            loading="lazy" />`
     : `<div class="thumb-fallback">
-         <img src="favicon.svg" alt="" />
-         <span>썸네일 없음</span>
+         <img src="��ǥ ������.png" alt="" />
+         <span>?�네???�음</span>
        </div>`;
 
-  // 태그 HTML (색상 적용)
+  // ?�그 HTML (?�상 ?�용)
   const tagsHtml = !song.locked && song.tags && song.tags.length > 0
     ? song.tags.map(t => {
         const c = getTagColor(t);
@@ -382,7 +380,7 @@ function createCardElement(song, idx) {
     ? `<span class="card-grade-badge">${escapeHtml(song.grade)}</span>`
     : '';
 
-  // 잠금 오버레이
+  // ?�금 ?�버?�이
   const lockOverlay = song.locked
     ? `<div class="lock-overlay">
          <div class="lock-icon-wrap">
@@ -394,12 +392,12 @@ function createCardElement(song, idx) {
        </div>`
     : '';
 
-  // 카드 잠금 버튼 (관리자)
+  // 카드 ?�금 버튼 (관리자)
   const lockBtnHtml = state.isAdmin
     ? `<button class="card-lock-btn${song.locked ? ' is-locked' : ''}"
                data-id="${song.id}"
-               title="${song.locked ? '잠금 해제' : '잠금'}"
-               aria-label="${song.locked ? '잠금 해제' : '잠금'}">
+               title="${song.locked ? '?�금 ?�제' : '?�금'}"
+               aria-label="${song.locked ? '?�금 ?�제' : '?�금'}">
          ${song.locked
            ? `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`
            : `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>`
@@ -408,7 +406,7 @@ function createCardElement(song, idx) {
     : '';
 
   card.innerHTML = `
-    <button class="card-edit-btn" data-edit="${song.id}" title="편집" aria-label="편집">
+    <button class="card-edit-btn" data-edit="${song.id}" title="?�집" aria-label="?�집">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--point-deep)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -428,15 +426,14 @@ function createCardElement(song, idx) {
       ${song.locked
         ? `<div class="card-locked-msg">
              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-             잠긴 콘텐츠
-           </div>`
+             ?�긴 콘텐�?           </div>`
         : `<div class="card-title">${escapeHtml(song.title)}</div>
            <div class="card-tags">${gradeBadge}${tagsHtml}</div>`
       }
     </div>
   `;
 
-  // 이벤트 위임으로 버튼 클릭 처리
+  // ?�벤???�임?�로 버튼 ?�릭 처리
   card.addEventListener('click', (e) => {
     const editBtn = e.target.closest('.card-edit-btn');
     const lockBtn = e.target.closest('.card-lock-btn');
@@ -452,7 +449,7 @@ function createCardElement(song, idx) {
       return;
     }
     if (song.locked) {
-      if (!state.isAdmin) showToast('잠긴 과학송입니다 🔒', 'warn');
+      if (!state.isAdmin) showToast('?�긴 과학?�입?�다 ?��', 'warn');
       return;
     }
     playSong(song);
@@ -461,9 +458,9 @@ function createCardElement(song, idx) {
   return card;
 }
 
-// ══════════════════════════════════════════════════════
+// ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
 // 6. LOCK MANAGEMENT
-// ══════════════════════════════════════════════════════
+// ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
 function toggleSongLock(id) {
   const song = state.songs.find(s => s.id === id);
   if (!song) return;
@@ -471,24 +468,24 @@ function toggleSongLock(id) {
   saveState();
   renderCards();
   renderGradeTabs();
-  showToast(song.locked ? `"${song.title}" 잠금됨 🔒` : `"${song.title}" 잠금 해제 🔓`, song.locked ? 'warn' : 'success');
+  showToast(song.locked ? `"${song.title}" ?�금???��` : `"${song.title}" ?�금 ?�제 ?��`, song.locked ? 'warn' : 'success');
 }
 
 function toggleGradeLock(grade, lock) {
-  const songs = grade === '전체'
+  const songs = grade === '?�체'
     ? state.songs
     : state.songs.filter(s => s.grade === grade);
   songs.forEach(s => s.locked = lock);
   saveState();
   renderCards();
   renderGradeTabs();
-  const label = grade === '전체' ? '전체' : `${grade}`;
-  showToast(lock ? `${label} 전체 잠금됨 🔒` : `${label} 전체 잠금 해제 🔓`, lock ? 'warn' : 'success');
+  const label = grade === '?�체' ? '?�체' : `${grade}`;
+  showToast(lock ? `${label} ?�체 ?�금???��` : `${label} ?�체 ?�금 ?�제 ?��`, lock ? 'warn' : 'success');
 }
 
-// ══════════════════════════════════════════════════════
+// ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
 // 7. GRADE NAVIGATION
-// ══════════════════════════════════════════════════════
+// ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
 function selectGrade(grade) {
   state.currentGrade = grade;
   renderGradeTabs();
@@ -496,9 +493,9 @@ function selectGrade(grade) {
   renderCards();
 }
 
-// ══════════════════════════════════════════════════════
+// ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
 // 8. ADMIN AUTH
-// ══════════════════════════════════════════════════════
+// ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
 function openAdminLogin() {
   if (state.isAdmin) { exitAdmin(); return; }
   document.getElementById('adminPasswordInput').value = '';
@@ -507,9 +504,16 @@ function openAdminLogin() {
   setTimeout(() => document.getElementById('adminPasswordInput').focus(), 100);
 }
 
-function verifyAdmin() {
+// SHA-256 ?�시 ?�틸 (crypto.subtle ?�용 ??개발???�구?�서 비�?번호 미노�?
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function verifyAdmin() {
   const pw = document.getElementById('adminPasswordInput').value;
-  if (pw === ADMIN_PW) {
+  const hash = await sha256(pw);
+  if (hash === ADMIN_HASH) {
     closeModal('adminLoginModal');
     enterAdmin();
   } else {
@@ -531,7 +535,7 @@ function enterAdmin() {
   document.getElementById('cardsGrid').classList.add('admin-mode');
   renderGradeTabs();
   renderCards();
-  showToast('관리자 모드 활성화 ✓', 'success');
+  showToast('관리자 모드 ?�성????, 'success');
 }
 
 function exitAdmin() {
@@ -551,13 +555,12 @@ function exitAdmin() {
   showToast('관리자 모드 종료');
 }
 
-// ══════════════════════════════════════════════════════
+// ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
 // 9. DRAG & DROP (SortableJS)
-// ══════════════════════════════════════════════════════
+// ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
 function setupSortable() {
   if (sortableInstance) { sortableInstance.destroy(); sortableInstance = null; }
-  // 기본순 정렬일 때만 드래그 앤 드롭 활성화
-  if (!state.isAdmin || state.sortBy !== 'default') return;
+  // 기본???�렬???�만 ?�래�????�롭 ?�성??  if (!state.isAdmin || state.sortBy !== 'default') return;
 
   const grid = document.getElementById('cardsGrid');
   sortableInstance = Sortable.create(grid, {
@@ -573,22 +576,22 @@ function setupSortable() {
         if (song) song.order = idx;
       });
       saveState();
-      showToast('순서가 변경되었습니다 ✓', 'success');
+      showToast('?�서가 변경되?�습?�다 ??, 'success');
     }
   });
 }
 
-// ══════════════════════════════════════════════════════
+// ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
 // 10. PLAYER
-// ══════════════════════════════════════════════════════
+// ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
 function playSong(song) {
   if (state.isAdmin) return;
-  if (song.locked) { showToast('잠긴 과학송입니다 🔒', 'warn'); return; }
+  if (song.locked) { showToast('?�긴 과학?�입?�다 ?��', 'warn'); return; }
 
   const videoId = song.videoId || extractVideoId(song.youtubeUrl);
   if (!videoId) {
     if (song.youtubeUrl) window.open(song.youtubeUrl, '_blank');
-    else showToast('재생할 영상 정보가 없습니다.', 'error');
+    else showToast('?�생???�상 ?�보가 ?�습?�다.', 'error');
     return;
   }
 
@@ -616,13 +619,13 @@ function closePlayer() {
   closeModal('playerModal');
 }
 
-// ══════════════════════════════════════════════════════
+// ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
 // 11. ADD / EDIT MODAL
-// ══════════════════════════════════════════════════════
+// ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
 function openAddModal() {
   state.editingId   = null;
   state.currentTags = [];
-  document.getElementById('songModalTitle').textContent         = '과학송 추가';
+  document.getElementById('songModalTitle').textContent         = '과학??추�?';
   document.getElementById('deleteSongBtn').style.display       = 'none';
   document.getElementById('songYoutubeUrl').value              = '';
   document.getElementById('songTitle').value                   = '';
@@ -641,7 +644,7 @@ function openEditModal(id) {
   state.editingId   = id;
   state.currentTags = [...(song.tags || [])];
 
-  document.getElementById('songModalTitle').textContent   = '과학송 편집';
+  document.getElementById('songModalTitle').textContent   = '과학???�집';
   document.getElementById('deleteSongBtn').style.display = '';
   document.getElementById('songYoutubeUrl').value        = song.youtubeUrl || '';
   document.getElementById('songTitle').value             = song.title || '';
@@ -660,8 +663,8 @@ function openEditModal(id) {
 
 function populateGradeSelect(selectedGrade = '') {
   const sel = document.getElementById('songGrade');
-  sel.innerHTML = '<option value="">학년 선택...</option>';
-  state.grades.filter(g => g !== '전체').forEach(g => {
+  sel.innerHTML = '<option value="">?�년 ?�택...</option>';
+  state.grades.filter(g => g !== '?�체').forEach(g => {
     const opt = document.createElement('option');
     opt.value = g;
     opt.textContent = g;
@@ -673,11 +676,11 @@ function populateGradeSelect(selectedGrade = '') {
 function fetchYoutubeThumbnail() {
   const url     = document.getElementById('songYoutubeUrl').value.trim();
   const videoId = extractVideoId(url);
-  if (!videoId) { showToast('올바른 YouTube URL을 입력해 주세요.', 'error'); return; }
+  if (!videoId) { showToast('?�바�?YouTube URL???�력??주세??', 'error'); return; }
   const thumb = getYoutubeThumbnail(videoId);
   document.getElementById('thumbPreviewImg').src             = thumb;
   document.getElementById('thumbPreviewArea').style.display = '';
-  showToast('썸네일을 가져왔습니다 ✓', 'success');
+  showToast('?�네?�을 가?�왔?�니????, 'success');
 }
 
 function clearThumbnail() {
@@ -690,9 +693,9 @@ function saveSong() {
   const title = document.getElementById('songTitle').value.trim();
   const grade = document.getElementById('songGrade').value;
 
-  if (!url)   { showToast('유튜브 URL을 입력해 주세요.', 'error'); return; }
-  if (!title) { showToast('노래 제목을 입력해 주세요.', 'error'); return; }
-  if (!grade) { showToast('학년을 선택해 주세요.', 'error'); return; }
+  if (!url)   { showToast('?�튜�?URL???�력??주세??', 'error'); return; }
+  if (!title) { showToast('?�래 ?�목???�력??주세??', 'error'); return; }
+  if (!grade) { showToast('?�년???�택??주세??', 'error'); return; }
 
   const videoId   = extractVideoId(url) || '';
   const thumbSrc  = document.getElementById('thumbPreviewImg').src || '';
@@ -709,14 +712,14 @@ function saveSong() {
         tags: [...state.currentTags]
       };
     }
-    showToast('수정되었습니다 ✓', 'success');
+    showToast('?�정?�었?�니????, 'success');
   } else {
     const maxOrder = state.songs.reduce((m, s) => Math.max(m, s.order ?? 0), -1);
     state.songs.push({
       id: uid(), title, grade, youtubeUrl: url, videoId, thumbnail,
       tags: [...state.currentTags], order: maxOrder + 1, locked: false
     });
-    showToast('과학송이 추가되었습니다 ✓', 'success');
+    showToast('과학?�이 추�??�었?�니????, 'success');
   }
 
   saveState();
@@ -729,7 +732,7 @@ function saveSong() {
 
 function deleteSong() {
   if (!state.editingId) return;
-  if (!confirm('이 과학송을 삭제할까요?')) return;
+  if (!confirm('??과학?�을 ??��?�까??')) return;
   state.songs = state.songs.filter(s => s.id !== state.editingId);
   saveState();
   closeModal('songModal');
@@ -737,12 +740,12 @@ function deleteSong() {
   renderSidebarStats();
   renderPageTitle();
   renderCards();
-  showToast('삭제되었습니다.', 'warn');
+  showToast('??��?�었?�니??', 'warn');
 }
 
-// ══════════════════════════════════════════════════════
+// ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
 // 12. TAG INPUT
-// ══════════════════════════════════════════════════════
+// ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
 function handleTagInput(e) {
   if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addTagFromInput(); }
 }
@@ -766,15 +769,15 @@ function renderTagList() {
   state.currentTags.forEach(tag => {
     const chip = document.createElement('span');
     chip.className = 'tag-chip';
-    chip.innerHTML = `#${escapeHtml(tag)} <button class="tag-chip-remove" data-tag="${escapeHtml(tag)}" aria-label="삭제">×</button>`;
+    chip.innerHTML = `#${escapeHtml(tag)} <button class="tag-chip-remove" data-tag="${escapeHtml(tag)}" aria-label="??��">×</button>`;
     chip.querySelector('.tag-chip-remove').addEventListener('click', () => removeTag(tag));
     list.appendChild(chip);
   });
 }
 
-// ══════════════════════════════════════════════════════
+// ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
 // 13. GRADE MANAGEMENT
-// ══════════════════════════════════════════════════════
+// ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
 function openGradeModal() {
   renderGradeManageList();
   openModal('gradeModal');
@@ -783,13 +786,13 @@ function openGradeModal() {
 function renderGradeManageList() {
   const ul = document.getElementById('gradeManageList');
   ul.innerHTML = '';
-  state.grades.filter(g => g !== '전체').forEach(grade => {
+  state.grades.filter(g => g !== '?�체').forEach(grade => {
     const count = state.songs.filter(s => s.grade === grade).length;
     const li = document.createElement('li');
     li.className = 'grade-manage-item';
     li.innerHTML = `
-      <span>${escapeHtml(grade)} <small style="color:var(--muted)">(${count}개)</small></span>
-      <button data-grade="${escapeHtml(grade)}">삭제</button>
+      <span>${escapeHtml(grade)} <small style="color:var(--muted)">(${count}�?</small></span>
+      <button data-grade="${escapeHtml(grade)}">??��</button>
     `;
     li.querySelector('button').addEventListener('click', () => removeGrade(grade));
     ul.appendChild(li);
@@ -800,34 +803,34 @@ function addGrade() {
   const input = document.getElementById('newGradeInput');
   const val   = input.value.trim();
   if (!val) return;
-  if (state.grades.includes(val)) { showToast('이미 존재하는 학년입니다.', 'warn'); return; }
+  if (state.grades.includes(val)) { showToast('?��? 존재?�는 ?�년?�니??', 'warn'); return; }
   state.grades.push(val);
   saveState();
   input.value = '';
   renderGradeManageList();
   renderGradeTabs();
-  showToast(`"${val}" 추가 ✓`, 'success');
+  showToast(`"${val}" 추�? ??, 'success');
 }
 
 function removeGrade(grade) {
   const count = state.songs.filter(s => s.grade === grade).length;
   if (count > 0) {
-    showToast(`이 학년에 과학송 ${count}개가 있습니다. 먼저 다른 학년으로 이동해 주세요.`, 'error');
+    showToast(`???�년??과학??${count}개�? ?�습?�다. 먼�? ?�른 ?�년?�로 ?�동??주세??`, 'error');
     return;
   }
-  if (!confirm(`"${grade}"을(를) 삭제할까요?`)) return;
+  if (!confirm(`"${grade}"??�? ??��?�까??`)) return;
   state.grades = state.grades.filter(g => g !== grade);
-  if (state.currentGrade === grade) state.currentGrade = '전체';
+  if (state.currentGrade === grade) state.currentGrade = '?�체';
   saveState();
   renderGradeManageList();
   renderGradeTabs();
   renderCards();
-  showToast(`"${grade}" 삭제됨`, 'warn');
+  showToast(`"${grade}" ??��??, 'warn');
 }
 
-// ══════════════════════════════════════════════════════
+// ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
 // 14. MODAL HELPERS
-// ══════════════════════════════════════════════════════
+// ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
 function openModal(id) {
   document.getElementById(id).style.display = 'flex';
   document.body.style.overflow = 'hidden';
@@ -854,9 +857,9 @@ document.addEventListener('keydown', e => {
   });
 });
 
-// ══════════════════════════════════════════════════════
+// ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
 // 15. TOAST
-// ══════════════════════════════════════════════════════
+// ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
 function showToast(msg, type = '') {
   const container = document.getElementById('toastContainer');
   const toast = document.createElement('div');
@@ -869,9 +872,9 @@ function showToast(msg, type = '') {
   }, 2800);
 }
 
-// ══════════════════════════════════════════════════════
+// ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
 // 16. INIT
-// ══════════════════════════════════════════════════════
+// ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
 function init() {
   loadState();
   renderGradeTabs();

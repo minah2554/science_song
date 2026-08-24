@@ -66,14 +66,21 @@ body {
   flex-shrink: 0;
 }
 
-/* 모든 음표 아이콘 이미지 — 배경 투명 처리 */
+/* 모든 음표 아이콘 이미지 — mix-blend-mode:multiply로 흰 배경 투명체인 */
 .header-rabbit img,
 .footer-rabbit img,
 .page-title-rabbit img,
-.empty-rabbit img,
+.empty-rabbit img {
+  display: block;
+  background: transparent;
+  mix-blend-mode: multiply;
+}
+
+/* thumb-fallback 내 음표는 mix-blend 제외 (배경이 핀크라 문제됨) */
 .thumb-fallback img {
   display: block;
   background: transparent;
+  opacity: 0.6;
 }
 
 .header-title-group {
@@ -83,8 +90,8 @@ body {
 }
 
 .header-title {
-  font-family: var(--round);
-  font-weight: 800;
+  font-family: 'NanumSquareRound', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  font-weight: bold;
   font-size: 16px;
   color: var(--ink);
   letter-spacing: -0.3px;
@@ -233,8 +240,8 @@ body {
 }
 
 .sidebar-stats strong {
-  font-family: var(--round);
-  font-weight: 800;
+  font-family: 'NanumSquareRound', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  font-weight: bold;
   font-size: 20px;
   display: block;
   line-height: 1;
@@ -306,7 +313,7 @@ body {
 }
 
 .page-title {
-  font-family: var(--round);
+  font-family: 'NanumSquareRound', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
   font-weight: 800;
   font-size: 26px;
   color: var(--ink);
@@ -707,7 +714,7 @@ body {
 }
 
 .card-title {
-  font-family: var(--round);
+  font-family: 'NanumSquareRound', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
   font-weight: 800;
   font-size: 17px;
   color: var(--ink);
@@ -760,8 +767,8 @@ body {
 }
 
 .empty-title {
-  font-family: var(--round);
-  font-weight: 800;
+  font-family: 'NanumSquareRound', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  font-weight: bold;
   font-size: 18px;
   color: var(--muted);
   margin-bottom: 6px;
@@ -954,8 +961,8 @@ body {
 }
 
 .modal-title {
-  font-family: var(--round);
-  font-weight: 800;
+  font-family: 'NanumSquareRound', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  font-weight: bold;
   font-size: 17px;
   color: var(--ink);
 }
@@ -1173,8 +1180,8 @@ body {
 .player-info { padding: 14px 20px; }
 
 .player-song-title {
-  font-family: var(--round);
-  font-weight: 800;
+  font-family: 'NanumSquareRound', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  font-weight: bold;
   font-size: 17px;
   color: var(--ink);
   margin-bottom: 8px;
