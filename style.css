@@ -1,6 +1,6 @@
 /* ============================================================
    MINARI STUDIO — 과학송 아카이브 Design System
-   style.css  v1.0
+   style.css  v2.0
    ============================================================ */
 
 /* ── 1. CSS Variables ── */
@@ -14,11 +14,10 @@
   --bg:         #f7f8fa;
   --surface:    #ffffff;
   --sys:  -apple-system, BlinkMacSystemFont, 'Pretendard Variable', Pretendard, 'Segoe UI', sans-serif;
-  --juache: 'Jua', 'Malgun Gothic', sans-serif;
-  --pen:    'Nanum Pen Script', cursive;
+  --round: 'NanumSquareRound', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
 
   /* Layout */
-  --header-h:  64px;
+  --header-h:  60px;
   --sidebar-w: 200px;
   --footer-h:  60px;
   --radius-card: 16px;
@@ -29,9 +28,7 @@
 
 /* ── 2. Reset & Base ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
 html { scroll-behavior: smooth; }
-
 body {
   font-family: var(--sys);
   background: var(--bg);
@@ -52,7 +49,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
+  padding: 0 18px;
   z-index: 100;
   box-shadow: 0 2px 12px rgba(0,0,0,0.04);
 }
@@ -69,15 +66,15 @@ body {
   flex-shrink: 0;
 }
 
+/* 모든 음표 아이콘 이미지 — 배경 투명 처리 */
 .header-rabbit img,
 .footer-rabbit img,
 .page-title-rabbit img,
-.empty-rabbit img {
+.empty-rabbit img,
+.thumb-fallback img {
   display: block;
-  mix-blend-mode: multiply;
   background: transparent;
 }
-
 
 .header-title-group {
   display: flex;
@@ -86,14 +83,15 @@ body {
 }
 
 .header-title {
-  font-family: var(--juache);
-  font-size: 17px;
+  font-family: var(--round);
+  font-weight: 800;
+  font-size: 16px;
   color: var(--ink);
   letter-spacing: -0.3px;
 }
 
 .header-subtitle {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--muted);
   letter-spacing: 0.2px;
 }
@@ -154,7 +152,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 12px;
+  padding: 9px 12px;
   border-radius: 10px;
   font-size: 14px;
   font-weight: 500;
@@ -193,6 +191,36 @@ body {
   color: #fff;
 }
 
+/* 탭 잠금 버튼 (관리자 모드) */
+.tab-lock-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 11px;
+  transition: all var(--transition);
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.tab-lock-btn:hover {
+  background: var(--point);
+  border-color: var(--point-line);
+  color: var(--point-deep);
+}
+
+.tab-lock-btn.locked {
+  background: #FFF3CD;
+  border-color: #FFD54F;
+  color: #7a5c00;
+}
+
 .sidebar-stats {
   margin-top: 16px;
   padding: 12px;
@@ -205,26 +233,28 @@ body {
 }
 
 .sidebar-stats strong {
-  font-family: var(--juache);
+  font-family: var(--round);
+  font-weight: 800;
   font-size: 20px;
   display: block;
   line-height: 1;
   margin-bottom: 2px;
 }
 
-/* ── 6. Mobile Grade Bar ── */
+/* ── 6. Mobile Grade Bar (헤더 아래 별도 요소) ── */
 .mobile-grade-bar {
   display: none;
   position: sticky;
   top: var(--header-h);
-  z-index: 50;
+  z-index: 90;
   background: var(--surface);
   border-bottom: 1px solid var(--line);
-  padding: 10px 16px;
+  padding: 8px 16px;
   gap: 8px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 .mobile-grade-bar::-webkit-scrollbar { display: none; }
 
@@ -252,50 +282,173 @@ body {
 /* ── 7. Main Content ── */
 .main-content {
   flex: 1;
-  padding: 28px 28px 40px;
+  padding: 24px 28px 40px;
   min-width: 0;
 }
 
 /* ── 8. Page Title ── */
 .page-title-area {
-  text-align: center;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   animation: fadeInDown 0.4s ease both;
 }
 
+/* 전체 과학송 타이틀 */
 .page-title-inner {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 12px;
-  margin-bottom: 0;
+  gap: 14px;
 }
 
-.page-title-rabbit img {
-  display: block;
+.page-title-rabbit {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .page-title {
-  font-family: var(--juache);
-  font-size: 28px;
+  font-family: var(--round);
+  font-weight: 800;
+  font-size: 26px;
   color: var(--ink);
   letter-spacing: -0.5px;
+  line-height: 1.2;
 }
 
-.page-subtitle {
-  font-size: 14px;
+.page-title-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.page-total-badge {
+  font-size: 12px;
+  font-weight: 600;
   color: var(--muted);
-  font-family: var(--pen);
-  font-size: 16px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 2px 10px;
 }
 
-/* ── 9. Admin Banner ── */
+.title-grade-chip {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--point-deep);
+  background: var(--point);
+  border: 1px solid var(--point-line);
+  border-radius: 20px;
+  padding: 2px 10px;
+}
+
+.title-grade-chip strong {
+  font-weight: 800;
+}
+
+/* 학년별 타이틀 배너 */
+.page-title-banner {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  box-shadow: var(--shadow-card);
+}
+
+.page-title-banner-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.page-title-count {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+.page-title-count strong {
+  color: var(--point-deep);
+  font-weight: 800;
+}
+
+.page-title-units {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.title-unit-chip {
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 20px;
+  border: 1px solid transparent;
+  padding: 3px 10px;
+  letter-spacing: 0.1px;
+}
+
+/* ── 9. Sort Bar ── */
+.sort-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.sort-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.sort-options {
+  display: flex;
+  gap: 4px;
+}
+
+.sort-btn {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  cursor: pointer;
+  font-family: var(--sys);
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+
+.sort-btn:hover {
+  background: var(--point);
+  color: var(--point-deep);
+  border-color: var(--point-line);
+}
+
+.sort-btn.active {
+  background: var(--point-deep);
+  color: #fff;
+  border-color: var(--point-deep);
+}
+
+/* ── 10. Admin Banner ── */
 .admin-banner {
   background: linear-gradient(135deg, #FFF8E1, #FFF3CD);
   border: 1px solid #FFD54F;
   border-radius: 12px;
-  padding: 12px 16px;
-  font-size: 13px;
+  padding: 11px 16px;
+  font-size: 12px;
   color: #7a5c00;
   margin-bottom: 16px;
   display: flex;
@@ -303,6 +456,7 @@ body {
   justify-content: space-between;
   gap: 12px;
   animation: fadeIn 0.3s ease both;
+  flex-wrap: wrap;
 }
 
 .admin-banner span {
@@ -317,15 +471,15 @@ body {
   gap: 8px;
 }
 
-/* ── 10. Cards Grid ── */
+/* ── 11. Cards Grid ── */
 .cards-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  gap: 18px;
   animation: fadeIn 0.35s ease both;
 }
 
-/* ── 11. Song Card ── */
+/* ── 12. Song Card ── */
 .song-card {
   background: var(--surface);
   border: 1px solid var(--line);
@@ -346,17 +500,29 @@ body {
   border-color: var(--point-line);
 }
 
-.song-card:active {
-  transform: translateY(-1px);
+.song-card:active { transform: translateY(-1px); }
+
+/* 잠긴 카드 스타일 */
+.song-card--locked {
+  cursor: default;
+  opacity: 0.85;
 }
 
-/* Drag & Drop Admin style */
-.admin-mode .song-card {
-  cursor: grab;
+.song-card--locked:hover {
+  transform: none;
+  box-shadow: var(--shadow-card);
+  border-color: var(--line);
 }
-.admin-mode .song-card:active {
-  cursor: grabbing;
+
+.song-card--locked .card-thumb {
+  filter: brightness(0.6) saturate(0.3);
 }
+
+/* Drag & Drop Admin */
+.admin-mode .song-card { cursor: grab; }
+.admin-mode .song-card--locked { cursor: default; }
+.admin-mode .song-card:active { cursor: grabbing; }
+
 .song-card.sortable-ghost {
   opacity: 0.4;
   border: 2px dashed var(--point-deep);
@@ -372,9 +538,9 @@ body {
 .card-edit-btn {
   position: absolute;
   top: 8px; right: 8px;
-  width: 28px; height: 28px;
+  width: 26px; height: 26px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.92);
   border: 1px solid var(--line);
   display: none;
   align-items: center;
@@ -384,13 +550,77 @@ body {
   transition: background var(--transition), border-color var(--transition);
 }
 
-.admin-mode .card-edit-btn {
-  display: flex;
-}
+.admin-mode .card-edit-btn { display: flex; }
 
 .card-edit-btn:hover {
   background: var(--point);
   border-color: var(--point-line);
+}
+
+/* Card lock button (admin only) */
+.card-lock-btn {
+  position: absolute;
+  top: 8px; right: 42px;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.92);
+  border: 1px solid var(--line);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 5;
+  transition: all var(--transition);
+  color: var(--muted);
+}
+
+.admin-mode .card-lock-btn { display: flex; }
+
+.card-lock-btn:hover {
+  background: #FFF3CD;
+  border-color: #FFD54F;
+  color: #7a5c00;
+}
+
+.card-lock-btn.is-locked {
+  background: #FFF3CD;
+  border-color: #FFD54F;
+  color: #7a5c00;
+}
+
+/* Lock overlay on thumbnail */
+.lock-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(33,33,36,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+}
+
+.lock-icon-wrap {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.12);
+  border: 2px solid rgba(255,255,255,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(2px);
+}
+
+/* Locked card body */
+.card-locked-msg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  min-height: 40px;
 }
 
 /* Card Thumbnail */
@@ -416,9 +646,7 @@ body {
   transition: background var(--transition);
 }
 
-.song-card:hover .card-thumb-wrap::after {
-  background: rgba(0,0,0,0.08);
-}
+.song-card:hover .card-thumb-wrap::after { background: rgba(0,0,0,0.06); }
 
 /* Play overlay */
 .play-overlay {
@@ -433,13 +661,10 @@ body {
   pointer-events: none;
 }
 
-.song-card:hover .play-overlay {
-  opacity: 1;
-}
+.song-card:hover .play-overlay { opacity: 1; }
 
 .play-btn-circle {
-  width: 48px;
-  height: 48px;
+  width: 46px; height: 46px;
   border-radius: 50%;
   background: rgba(255,255,255,0.92);
   display: flex;
@@ -448,10 +673,7 @@ body {
   box-shadow: 0 4px 16px rgba(0,0,0,0.2);
 }
 
-.play-btn-circle svg {
-  color: var(--point-deep);
-  margin-left: 3px;
-}
+.play-btn-circle svg { color: var(--point-deep); margin-left: 3px; }
 
 /* Thumbnail fallback */
 .thumb-fallback {
@@ -467,53 +689,50 @@ body {
 }
 
 .thumb-fallback img {
-  width: 36px;
-  height: 36px;
+  width: 36px; height: 36px;
   object-fit: contain;
   opacity: 0.7;
+  background: transparent;
 }
 
-.thumb-fallback span {
-  font-size: 11px;
-  opacity: 0.7;
-}
+.thumb-fallback span { font-size: 11px; opacity: 0.7; }
 
 /* Card Body */
 .card-body {
-  padding: 12px 14px 14px;
+  padding: 10px 13px 13px;
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 7px;
 }
 
 .card-title {
-  font-family: var(--juache);
-  font-size: 30px;
+  font-family: var(--round);
+  font-weight: 800;
+  font-size: 17px;
   color: var(--ink);
   line-height: 1.35;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  letter-spacing: -0.3px;
 }
 
 .card-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 4px;
 }
 
 .card-tag {
   display: inline-flex;
   align-items: center;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--point-deep);
-  background: var(--point);
-  border: 1px solid var(--point-line);
+  font-size: 10px;
+  font-weight: 700;
   border-radius: 20px;
-  padding: 2px 9px;
+  border: 1px solid transparent;
+  padding: 2px 8px;
   letter-spacing: 0.1px;
 }
 
@@ -526,7 +745,7 @@ body {
   padding: 2px 8px;
 }
 
-/* ── 12. Empty State ── */
+/* ── 13. Empty State ── */
 .empty-state {
   grid-column: 1/-1;
   text-align: center;
@@ -541,8 +760,9 @@ body {
 }
 
 .empty-title {
-  font-family: var(--juache);
-  font-size: 20px;
+  font-family: var(--round);
+  font-weight: 800;
+  font-size: 18px;
   color: var(--muted);
   margin-bottom: 6px;
 }
@@ -550,11 +770,9 @@ body {
 .empty-desc {
   font-size: 14px;
   color: var(--muted);
-  font-family: var(--pen);
-  font-size: 16px;
 }
 
-/* ── 13. Footer ── */
+/* ── 14. Footer ── */
 .app-footer {
   background: var(--surface);
   border-top: 1px solid var(--line);
@@ -584,12 +802,9 @@ body {
   font-weight: 600;
 }
 
-.footer-copy {
-  font-size: 10px;
-  color: var(--muted);
-}
+.footer-copy { font-size: 10px; color: var(--muted); }
 
-/* ── 14. Buttons ── */
+/* ── 15. Buttons ── */
 .btn-primary {
   display: inline-flex;
   align-items: center;
@@ -653,9 +868,7 @@ body {
   white-space: nowrap;
 }
 
-.btn-outline:hover {
-  background: var(--point);
-}
+.btn-outline:hover { background: var(--point); }
 
 .btn-outline-sm {
   display: inline-flex;
@@ -697,7 +910,7 @@ body {
   border-color: #e53935;
 }
 
-/* ── 15. Modals ── */
+/* ── 16. Modals ── */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -708,7 +921,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 16px;
   animation: fadeIn 0.2s ease both;
 }
 
@@ -724,17 +937,13 @@ body {
 }
 
 .modal-box--wide { max-width: 540px; }
-
-.modal-box--player {
-  max-width: 760px;
-  width: 100%;
-}
+.modal-box--player { max-width: 760px; width: 100%; }
 
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 24px 16px;
+  padding: 18px 22px 14px;
   border-bottom: 1px solid var(--line);
 }
 
@@ -745,18 +954,19 @@ body {
 }
 
 .modal-title {
-  font-family: var(--juache);
-  font-size: 18px;
+  font-family: var(--round);
+  font-weight: 800;
+  font-size: 17px;
   color: var(--ink);
 }
 
 .modal-close {
-  width: 32px; height: 32px;
+  width: 30px; height: 30px;
   border-radius: 50%;
   border: 1px solid var(--line);
   background: var(--bg);
   color: var(--muted);
-  font-size: 14px;
+  font-size: 13px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -771,28 +981,19 @@ body {
   color: var(--point-deep);
 }
 
-.modal-body {
-  padding: 20px 24px;
-}
-
-.modal-desc {
-  font-size: 14px;
-  color: var(--muted);
-  margin-bottom: 16px;
-}
+.modal-body { padding: 18px 22px; }
+.modal-desc { font-size: 14px; color: var(--muted); margin-bottom: 16px; }
 
 .modal-footer {
-  padding: 16px 24px 20px;
+  padding: 14px 22px 18px;
   border-top: 1px solid var(--line);
   display: flex;
   justify-content: flex-end;
   gap: 8px;
 }
 
-/* ── 16. Forms ── */
-.form-group {
-  margin-bottom: 16px;
-}
+/* ── 17. Forms ── */
+.form-group { margin-bottom: 16px; }
 
 .form-label {
   display: block;
@@ -822,26 +1023,13 @@ body {
   box-shadow: 0 0 0 3px rgba(194,112,140,0.12);
 }
 
-.form-hint {
-  font-size: 12px;
-  color: var(--muted);
-  margin-top: 5px;
-}
+.form-hint { font-size: 12px; color: var(--muted); margin-top: 5px; }
+.form-error { font-size: 12px; color: #e53935; margin-top: 5px; }
 
-.form-error {
-  font-size: 12px;
-  color: #e53935;
-  margin-top: 5px;
-}
-
-.url-input-row {
-  display: flex;
-  gap: 8px;
-}
-
+.url-input-row { display: flex; gap: 8px; }
 .url-input-row .form-input { flex: 1; }
 
-/* ── 17. Tag Input ── */
+/* ── 18. Tag Input ── */
 .tag-input-wrapper {
   border: 1.5px solid var(--line);
   border-radius: 10px;
@@ -860,11 +1048,7 @@ body {
   box-shadow: 0 0 0 3px rgba(194,112,140,0.12);
 }
 
-.tag-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
+.tag-list { display: flex; flex-wrap: wrap; gap: 5px; }
 
 .tag-chip {
   display: inline-flex;
@@ -876,7 +1060,7 @@ body {
   background: var(--point);
   border: 1px solid var(--point-line);
   border-radius: 20px;
-  padding: 3px 10px 3px 10px;
+  padding: 3px 10px;
 }
 
 .tag-chip-remove {
@@ -903,7 +1087,7 @@ body {
   flex: 1;
 }
 
-/* ── 18. Thumbnail Preview ── */
+/* ── 19. Thumbnail Preview ── */
 .thumb-preview-area {
   position: relative;
   margin-bottom: 16px;
@@ -935,7 +1119,7 @@ body {
   font-family: var(--sys);
 }
 
-/* ── 19. Grade Manage List ── */
+/* ── 20. Grade Manage List ── */
 .grade-manage-list {
   list-style: none;
   display: flex;
@@ -969,7 +1153,7 @@ body {
 
 .grade-manage-item button:hover { background: #ffebee; }
 
-/* ── 20. Player ── */
+/* ── 21. Player ── */
 .player-body { padding: 0 !important; }
 
 .youtube-embed-wrap {
@@ -986,20 +1170,19 @@ body {
   height: 100%;
 }
 
-.player-info {
-  padding: 16px 20px;
-}
+.player-info { padding: 14px 20px; }
 
 .player-song-title {
-  font-family: var(--juache);
-  font-size: 18px;
+  font-family: var(--round);
+  font-weight: 800;
+  font-size: 17px;
   color: var(--ink);
   margin-bottom: 8px;
 }
 
 .player-tags { display: flex; flex-wrap: wrap; gap: 5px; }
 
-/* ── 21. Toast ── */
+/* ── 22. Toast ── */
 .toast-container {
   position: fixed;
   bottom: 80px;
@@ -1025,10 +1208,9 @@ body {
 .toast.toast--success { background: #2e7d32; }
 .toast.toast--error   { background: #c62828; }
 .toast.toast--warn    { background: #f57f17; }
-
 .toast.fade-out { animation: fadeOut 0.3s ease forwards; }
 
-/* ── 22. Keyframes ── */
+/* ── 23. Keyframes ── */
 @keyframes fadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
@@ -1054,20 +1236,41 @@ body {
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* ── 23. Responsive ── */
+/* ── 24. Responsive ── */
+@media (max-width: 1100px) {
+  .cards-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+}
+
 @media (max-width: 900px) {
   .sidebar { display: none; }
   .mobile-grade-bar { display: flex; }
-  .main-content { padding: 20px 16px 40px; }
-  .cards-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .main-content { padding: 16px 14px 40px; }
+  .cards-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .page-title-banner { padding: 12px 16px; }
+  .sort-bar { margin-bottom: 12px; }
 }
 
 @media (max-width: 560px) {
-  .cards-grid { grid-template-columns: 1fr; gap: 12px; }
-  .page-title { font-size: 22px; }
+  :root { --header-h: 54px; }
+  .header-title { font-size: 14px; }
   .header-subtitle { display: none; }
+  .cards-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .card-title { font-size: 14px; }
+  .card-body { padding: 8px 10px 10px; gap: 5px; }
+  .page-title { font-size: 20px; }
+  .page-title-banner { gap: 8px; }
+  .page-title-units { gap: 4px; }
+  .title-unit-chip { font-size: 10px; padding: 2px 7px; }
   .modal-box { border-radius: 16px; }
   .modal-box--player { max-width: 100%; border-radius: 12px; }
+  .sort-btn { padding: 4px 10px; font-size: 11px; }
+  .admin-banner { font-size: 11px; }
+  .main-content { padding: 12px 12px 40px; }
+}
+
+@media (max-width: 400px) {
+  .cards-grid { grid-template-columns: 1fr; gap: 10px; }
+  .card-title { font-size: 16px; }
 }
 
 /* Scrollbar */
