@@ -144,6 +144,21 @@ async function sha256(str) {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+// 태그 정렬 유틸: 학년(뱃지) -> 단원(#N단원) -> 단원명 -> 추가입력 순서
+function sortTags(tags = []) {
+  const unitTags = [];
+  const otherTags = [];
+  tags.forEach(t => {
+    if (/^\d+단원$/.test(t.trim())) {
+      unitTags.push(t.trim());
+    } else {
+      otherTags.push(t.trim());
+    }
+  });
+  unitTags.sort((a, b) => parseInt(a) - parseInt(b));
+  return [...unitTags, ...otherTags];
+}
+
 // ══════════════════════════════════════════════════════
 // 4. SORT
 // ══════════════════════════════════════════════════════
@@ -158,6 +173,12 @@ function setSortBy(sortType) {
 
 function getFilteredSongs() {
   let songs = [...state.songs];
+
+  // 일반 사용자 화면에서는 잠긴 과학송을 아예 목록에서 제외 (완전 숨김)
+  if (!state.isAdmin) {
+    songs = songs.filter(s => !s.locked);
+  }
+
   if (state.currentGrade !== '전체') {
     songs = songs.filter(s => s.grade === state.currentGrade);
   }
@@ -191,10 +212,11 @@ function renderGradeTabs() {
   mobile.innerHTML = '';
 
   state.grades.forEach(grade => {
-    const gradeSongs = grade === '전체' ? state.songs : state.songs.filter(s => s.grade === grade);
-    const count = gradeSongs.length;
-    const isAllLocked = count > 0 && gradeSongs.every(s => s.locked);
-    const lockedCount = gradeSongs.filter(s => s.locked).length;
+    const allGradeSongs = grade === '전체' ? state.songs : state.songs.filter(s => s.grade === grade);
+    const visibleSongs = state.isAdmin ? allGradeSongs : allGradeSongs.filter(s => !s.locked);
+    const count = visibleSongs.length;
+    const isAllLocked = allGradeSongs.length > 0 && allGradeSongs.every(s => s.locked);
+    const lockedCount = allGradeSongs.filter(s => s.locked).length;
 
     // ── Desktop tab ──
     const btn = document.createElement('button');
@@ -211,7 +233,7 @@ function renderGradeTabs() {
       btn.innerHTML = `
         <span>${escapeHtml(grade)}</span>
         <span style="display:flex;align-items:center;gap:3px;">
-          <span class="tab-count">${count}</span>
+          <span class="tab-count">${allGradeSongs.length}</span>
           <button class="tab-lock-btn ${isAllLocked ? 'locked' : ''}"
                   data-grade="${escapeHtml(grade)}"
                   title="${lockTitle}" aria-label="${lockTitle}">
@@ -235,7 +257,7 @@ function renderGradeTabs() {
     mBtn.className = 'mobile-grade-tab' + (grade === state.currentGrade ? ' active' : '');
     mBtn.dataset.grade = grade;
     if (state.isAdmin && lockedCount > 0) {
-      mBtn.innerHTML = `${escapeHtml(grade)} <span style="font-size:10px;opacity:0.8;">🔒${lockedCount > 0 && lockedCount < count ? lockedCount : ''}</span>`;
+      mBtn.innerHTML = `${escapeHtml(grade)} <span style="font-size:10px;opacity:0.8;">🔒${lockedCount > 0 && lockedCount < allGradeSongs.length ? lockedCount : ''}</span>`;
     } else {
       mBtn.textContent = grade;
     }
@@ -268,7 +290,8 @@ function renderGradeTabs() {
 
 function renderSidebarStats() {
   const el = document.getElementById('sidebarStats');
-  const total      = state.songs.length;
+  const visibleSongs = state.isAdmin ? state.songs : state.songs.filter(s => !s.locked);
+  const total      = visibleSongs.length;
   const gradeCount = state.grades.filter(g => g !== '전체').length;
   el.innerHTML = `<strong>${total}</strong>개 과학송<br>${gradeCount}개 학년 운영 중`;
 }
@@ -278,11 +301,13 @@ function renderPageTitle() {
   const grade = state.currentGrade;
 
   if (grade === '전체') {
-    const total    = state.songs.length;
+    const visibleSongs = state.isAdmin ? state.songs : state.songs.filter(s => !s.locked);
+    const total    = visibleSongs.length;
     const chipsHtml = state.grades
       .filter(g => g !== '전체')
       .map(g => {
-        const cnt = state.songs.filter(s => s.grade === g).length;
+        const gradeSongs = state.songs.filter(s => s.grade === g);
+        const cnt = (state.isAdmin ? gradeSongs : gradeSongs.filter(s => !s.locked)).length;
         if (!cnt) return '';
         return `<span class="title-grade-chip">${escapeHtml(g)} <strong>${cnt}</strong>곡</span>`;
       })
@@ -303,7 +328,8 @@ function renderPageTitle() {
       </div>
     `;
   } else {
-    const songs = state.songs.filter(s => s.grade === grade);
+    const gradeSongs = state.songs.filter(s => s.grade === grade);
+    const songs = state.isAdmin ? gradeSongs : gradeSongs.filter(s => !s.locked);
     const total = songs.length;
 
     // 단원 분포 계산
@@ -375,9 +401,10 @@ function createCardElement(song, idx) {
          <span>썸네일 없음</span>
        </div>`;
 
-  // 태그 HTML (색상 적용)
-  const tagsHtml = !song.locked && song.tags && song.tags.length > 0
-    ? song.tags.map(t => {
+  // 태그 HTML (색상 적용 및 학년 -> 단원 -> 단원명 -> 추가입력 자동 정렬)
+  const sortedTags = sortTags(song.tags || []);
+  const tagsHtml = !song.locked && sortedTags.length > 0
+    ? sortedTags.map(t => {
         const c = getTagColor(t);
         return `<span class="card-tag" style="background:${c.bg};border-color:${c.border};color:${c.text}">#${escapeHtml(t)}</span>`;
       }).join('')
@@ -599,7 +626,8 @@ function playSong(song) {
   document.getElementById('youtubeIframe').src = getYoutubeEmbedUrl(videoId);
   document.getElementById('playerModalTitle').textContent = song.title;
 
-  const tagsHtml = (song.tags || []).map(t => {
+  const sortedTags = sortTags(song.tags || []);
+  const tagsHtml = sortedTags.map(t => {
     const c = getTagColor(t);
     return `<span class="card-tag" style="background:${c.bg};border-color:${c.border};color:${c.text}">#${escapeHtml(t)}</span>`;
   }).join('');
@@ -704,13 +732,15 @@ function saveSong() {
     ? thumbSrc
     : (videoId ? getYoutubeThumbnail(videoId) : '');
 
+  const processedTags = sortTags(state.currentTags);
+
   if (state.editingId) {
     const idx = state.songs.findIndex(s => s.id === state.editingId);
     if (idx !== -1) {
       state.songs[idx] = {
         ...state.songs[idx],
         title, grade, youtubeUrl: url, videoId, thumbnail,
-        tags: [...state.currentTags]
+        tags: processedTags
       };
     }
     showToast('수정되었습니다 ✓', 'success');
@@ -718,7 +748,7 @@ function saveSong() {
     const maxOrder = state.songs.reduce((m, s) => Math.max(m, s.order ?? 0), -1);
     state.songs.push({
       id: uid(), title, grade, youtubeUrl: url, videoId, thumbnail,
-      tags: [...state.currentTags], order: maxOrder + 1, locked: false
+      tags: processedTags, order: maxOrder + 1, locked: false
     });
     showToast('과학송이 추가되었습니다 ✓', 'success');
   }

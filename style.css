@@ -5,6 +5,12 @@
 
 /* ── 0. Web Fonts ── */
 @font-face {
+  font-family: 'Juache';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_one@1.0/BMJUA.woff') format('woff');
+  font-weight: normal;
+  font-display: swap;
+}
+@font-face {
   font-family: 'NanumSquareRound';
   src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/NanumSquareRound.woff') format('woff');
   font-weight: normal;
@@ -110,9 +116,9 @@ body {
 }
 
 .header-title {
-  font-family: 'NanumSquareRound', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
-  font-weight: bold;
-  font-size: 16px;
+  font-family: 'Juache', 'Jua', 'NanumSquareRound', sans-serif !important;
+  font-weight: normal;
+  font-size: 18px;
   color: var(--ink);
   letter-spacing: -0.3px;
 }
@@ -412,11 +418,11 @@ body {
 }
 
 .title-unit-chip {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   border-radius: 20px;
   border: 1px solid transparent;
-  padding: 3px 10px;
+  padding: 4px 11px;
   letter-spacing: 0.1px;
 }
 
@@ -749,27 +755,27 @@ body {
 .card-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 5px;
 }
 
 .card-tag {
   display: inline-flex;
   align-items: center;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   border-radius: 20px;
   border: 1px solid transparent;
-  padding: 2px 8px;
+  padding: 3px 9px;
   letter-spacing: 0.1px;
 }
 
 .card-grade-badge {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   color: #fff;
   background: var(--point-deep);
   border-radius: 20px;
-  padding: 2px 8px;
+  padding: 3px 9px;
 }
 
 /* ── 13. Empty State ── */
