@@ -1311,3 +1311,93 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--point-line); }
+
+/* ── 18. Data Management & Cloud Sync ── */
+.data-section {
+  padding: 16px;
+  background: var(--bg);
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  margin-bottom: 14px;
+}
+
+.data-section:last-child {
+  margin-bottom: 0;
+}
+
+.data-section--danger {
+  background: #FFF5F5;
+  border-color: #FFCDD2;
+}
+
+.data-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.data-section-title {
+  font-family: var(--round);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.data-section-desc {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.data-btn-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cloud-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.cloud-status--local {
+  background: #EAEBEE;
+  color: var(--muted);
+}
+
+.cloud-status--connected {
+  background: #E8F5E9;
+  color: #2E7D32;
+}
+
+.cloud-status--error {
+  background: #FFEBEE;
+  color: #C62828;
+}
+
+.form-textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  font-size: 13px;
+  font-family: var(--sys);
+  color: var(--ink);
+  background: var(--surface);
+  transition: border-color var(--transition);
+  outline: none;
+  resize: vertical;
+}
+
+.form-textarea:focus {
+  border-color: var(--point-deep);
+}
+

@@ -83,11 +83,56 @@ function getUnitNumber(song) {
 }
 
 // ══════════════════════════════════════════════════════
-// 2. PERSISTENCE
+// 2. PERSISTENCE & REAL-TIME SYNC
 // ══════════════════════════════════════════════════════
-function saveState() {
-  const toSave = { grades: state.grades, songs: state.songs };
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave)); } catch(e) {}
+const FIREBASE_CONFIG_KEY = 'scienceSong_firebase_config';
+let firestoreDb = null;
+let firestoreUnsubscribe = null;
+let syncBroadcast = null;
+
+try {
+  if (typeof BroadcastChannel !== 'undefined') {
+    syncBroadcast = new BroadcastChannel('science_song_sync_channel');
+    syncBroadcast.onmessage = (event) => {
+      if (event.data && event.data.type === 'STATE_UPDATED') {
+        loadState();
+        renderAll();
+      }
+    };
+  }
+} catch(e) {}
+
+// 브라우저 탭 간 실시간 storage 이벤트 동기화
+window.addEventListener('storage', (e) => {
+  if (e.key === STORAGE_KEY) {
+    loadState();
+    renderAll();
+  }
+});
+
+function saveState(skipCloud = false) {
+  const toSave = {
+    grades: state.grades,
+    songs: state.songs,
+    updatedAt: Date.now()
+  };
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+  } catch(e) {
+    console.warn('LocalStorage 저장 실패:', e);
+  }
+
+  // 다른 탭으로 실시간 전파
+  try {
+    if (syncBroadcast) {
+      syncBroadcast.postMessage({ type: 'STATE_UPDATED', updatedAt: toSave.updatedAt });
+    }
+  } catch(e) {}
+
+  // Firebase 실시간 클라우드 DB로 동기화
+  if (!skipCloud) {
+    saveToCloud(toSave);
+  }
 }
 
 function loadState() {
@@ -95,12 +140,106 @@ function loadState() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return;
     const saved = JSON.parse(raw);
-    if (saved.grades && Array.isArray(saved.grades)) state.grades = saved.grades;
-    if (saved.songs  && Array.isArray(saved.songs)) {
-      state.songs = saved.songs.map(s => ({ locked: false, ...s }));
+    if (saved.grades && Array.isArray(saved.grades) && saved.grades.length > 0) {
+      // '전체' 탭 보장
+      const validGrades = saved.grades.includes('전체') ? saved.grades : ['전체', ...saved.grades];
+      state.grades = validGrades;
     }
-  } catch(e) {}
+    if (saved.songs && Array.isArray(saved.songs)) {
+      state.songs = saved.songs.map((s, idx) => ({
+        locked: false,
+        order: s.order ?? idx,
+        ...s
+      }));
+    }
+  } catch(e) {
+    console.warn('LocalStorage 불러오기 오류:', e);
+  }
 }
+
+// ── Firebase 클라우드 실시간 동기화 초기화 ──
+function initFirebaseSync() {
+  const rawConfig = localStorage.getItem(FIREBASE_CONFIG_KEY);
+  if (!rawConfig) {
+    updateCloudBadge('local');
+    return;
+  }
+
+  try {
+    const config = JSON.parse(rawConfig);
+    if (typeof firebase === 'undefined') {
+      updateCloudBadge('local');
+      return;
+    }
+
+    if (!firebase.apps || !firebase.apps.length) {
+      firebase.initializeApp(config);
+    }
+    firestoreDb = firebase.firestore();
+    updateCloudBadge('connected');
+
+    if (firestoreUnsubscribe) {
+      firestoreUnsubscribe();
+      firestoreUnsubscribe = null;
+    }
+
+    // Firestore 실시간 스냅샷 리스너 (원격 변경 실시간 감지)
+    firestoreUnsubscribe = firestoreDb.collection('archive').doc('main').onSnapshot((doc) => {
+      if (doc.exists) {
+        const remoteData = doc.data();
+        if (remoteData && remoteData.songs && Array.isArray(remoteData.songs)) {
+          // 로컬 데이터보다 최신이거나 첫 로드 시 반영
+          state.songs = remoteData.songs.map((s, idx) => ({
+            locked: false,
+            order: s.order ?? idx,
+            ...s
+          }));
+          if (remoteData.grades && Array.isArray(remoteData.grades)) {
+            state.grades = remoteData.grades;
+          }
+          saveState(true); // 로컬스토리지에 캐시하고 클라우드 재전송은 스킵
+          renderAll();
+        }
+      }
+    }, (err) => {
+      console.warn('Firestore 실시간 구독 에러:', err);
+      updateCloudBadge('error');
+    });
+  } catch (err) {
+    console.warn('Firebase 초기화 실패:', err);
+    updateCloudBadge('error');
+  }
+}
+
+async function saveToCloud(data) {
+  if (!firestoreDb) return;
+  try {
+    await firestoreDb.collection('archive').doc('main').set({
+      songs: data.songs,
+      grades: data.grades,
+      updatedAt: data.updatedAt || Date.now()
+    }, { merge: true });
+  } catch (err) {
+    console.warn('클라우드 저장 실패:', err);
+  }
+}
+
+function updateCloudBadge(status) {
+  const badge = document.getElementById('cloudStatusBadge');
+  if (!badge) return;
+  badge.className = 'cloud-status-badge';
+  if (status === 'connected') {
+    badge.classList.add('cloud-status--connected');
+    badge.textContent = '☁️ 실시간 클라우드 연결됨';
+  } else if (status === 'error') {
+    badge.classList.add('cloud-status--error');
+    badge.textContent = '⚠️ 클라우드 연결 오류';
+  } else {
+    badge.classList.add('cloud-status--local');
+    badge.textContent = '💾 로컬 저장소 모드';
+  }
+}
+
 
 // ══════════════════════════════════════════════════════
 // 3. UTILS
@@ -482,8 +621,13 @@ function createCardElement(song, idx) {
       toggleSongLock(lockBtn.dataset.id);
       return;
     }
+    if (state.isAdmin) {
+      // 관리자 모드에서는 카드 전체 클릭 시 바로 편집창 열림
+      openEditModal(song.id);
+      return;
+    }
     if (song.locked) {
-      if (!state.isAdmin) showToast('잠긴 과학송입니다 🔒', 'warn');
+      showToast('잠긴 과학송입니다 🔒', 'warn');
       return;
     }
     playSong(song);
@@ -717,6 +861,22 @@ function clearThumbnail() {
   document.getElementById('thumbPreviewArea').style.display = 'none';
 }
 
+function setupYoutubeUrlAutoThumb() {
+  const input = document.getElementById('songYoutubeUrl');
+  if (!input) return;
+  const updateThumb = () => {
+    const url = input.value.trim();
+    const videoId = extractVideoId(url);
+    if (videoId) {
+      const thumb = getYoutubeThumbnail(videoId);
+      document.getElementById('thumbPreviewImg').src = thumb;
+      document.getElementById('thumbPreviewArea').style.display = '';
+    }
+  };
+  input.addEventListener('input', updateThumb);
+  input.addEventListener('paste', () => setTimeout(updateThumb, 50));
+}
+
 function saveSong() {
   const url   = document.getElementById('songYoutubeUrl').value.trim();
   const title = document.getElementById('songTitle').value.trim();
@@ -728,7 +888,7 @@ function saveSong() {
 
   const videoId   = extractVideoId(url) || '';
   const thumbSrc  = document.getElementById('thumbPreviewImg').src || '';
-  const thumbnail = (thumbSrc && !thumbSrc.endsWith('undefined'))
+  const thumbnail = (thumbSrc && !thumbSrc.endsWith('undefined') && thumbSrc !== window.location.href)
     ? thumbSrc
     : (videoId ? getYoutubeThumbnail(videoId) : '');
 
@@ -739,26 +899,34 @@ function saveSong() {
     if (idx !== -1) {
       state.songs[idx] = {
         ...state.songs[idx],
-        title, grade, youtubeUrl: url, videoId, thumbnail,
+        title,
+        grade,
+        youtubeUrl: url,
+        videoId: videoId || state.songs[idx].videoId,
+        thumbnail: thumbnail || (videoId ? getYoutubeThumbnail(videoId) : state.songs[idx].thumbnail),
         tags: processedTags
       };
     }
-    showToast('수정되었습니다 ✓', 'success');
+    showToast(`"${title}" 수정 완료 ✓`, 'success');
   } else {
     const maxOrder = state.songs.reduce((m, s) => Math.max(m, s.order ?? 0), -1);
     state.songs.push({
-      id: uid(), title, grade, youtubeUrl: url, videoId, thumbnail,
-      tags: processedTags, order: maxOrder + 1, locked: false
+      id: uid(),
+      title,
+      grade,
+      youtubeUrl: url,
+      videoId,
+      thumbnail: thumbnail || (videoId ? getYoutubeThumbnail(videoId) : ''),
+      tags: processedTags,
+      order: maxOrder + 1,
+      locked: false
     });
-    showToast('과학송이 추가되었습니다 ✓', 'success');
+    showToast(`"${title}" 추가 완료 ✓`, 'success');
   }
 
   saveState();
   closeModal('songModal');
-  renderGradeTabs();
-  renderSidebarStats();
-  renderPageTitle();
-  renderCards();
+  renderAll();
 }
 
 function deleteSong() {
@@ -767,10 +935,7 @@ function deleteSong() {
   state.songs = state.songs.filter(s => s.id !== state.editingId);
   saveState();
   closeModal('songModal');
-  renderGradeTabs();
-  renderSidebarStats();
-  renderPageTitle();
-  renderCards();
+  renderAll();
   showToast('삭제되었습니다.', 'warn');
 }
 
@@ -860,7 +1025,182 @@ function removeGrade(grade) {
 }
 
 // ══════════════════════════════════════════════════════
-// 14. MODAL HELPERS
+// 14. DATA & CLOUD MANAGEMENT
+// ══════════════════════════════════════════════════════
+function openDataModal() {
+  const savedConfig = localStorage.getItem(FIREBASE_CONFIG_KEY) || '';
+  const configInput = document.getElementById('firebaseConfigInput');
+  if (configInput) configInput.value = savedConfig;
+  updateCloudBadge(firestoreDb ? 'connected' : (savedConfig ? 'error' : 'local'));
+  openModal('dataModal');
+}
+
+function exportDataJson() {
+  const data = {
+    grades: state.grades,
+    songs: state.songs,
+    exportedAt: new Date().toISOString(),
+    version: '2.1'
+  };
+  const jsonStr = JSON.stringify(data, null, 2);
+  const blob = new Blob([jsonStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `science_songs_backup_${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('백업 JSON 파일이 다운로드되었습니다 ✓', 'success');
+}
+
+function copyDataJson() {
+  const data = {
+    grades: state.grades,
+    songs: state.songs,
+    exportedAt: new Date().toISOString()
+  };
+  const jsonStr = JSON.stringify(data, null, 2);
+  navigator.clipboard.writeText(jsonStr).then(() => {
+    showToast('전체 데이터가 클립보드에 복사되었습니다 ✓', 'success');
+  }).catch(() => {
+    showToast('복사에 실패했습니다.', 'error');
+  });
+}
+
+function togglePasteImportArea() {
+  const area = document.getElementById('pasteImportArea');
+  if (!area) return;
+  area.style.display = area.style.display === 'none' ? 'block' : 'none';
+  if (area.style.display === 'block') {
+    document.getElementById('importJsonText').focus();
+  }
+}
+
+function importDataFromFile(e) {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    try {
+      const parsed = JSON.parse(event.target.result);
+      applyImportedData(parsed);
+      e.target.value = '';
+    } catch(err) {
+      showToast('올바른 JSON 파일 형식이 아닙니다.', 'error');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function importDataFromText() {
+  const text = document.getElementById('importJsonText').value.trim();
+  if (!text) {
+    showToast('JSON 텍스트를 입력해 주세요.', 'error');
+    return;
+  }
+  try {
+    const parsed = JSON.parse(text);
+    applyImportedData(parsed);
+    document.getElementById('importJsonText').value = '';
+    document.getElementById('pasteImportArea').style.display = 'none';
+  } catch(err) {
+    showToast('올바른 JSON 형식이 아닙니다.', 'error');
+  }
+}
+
+function applyImportedData(data) {
+  let importedSongs = [];
+  let importedGrades = null;
+
+  if (Array.isArray(data)) {
+    importedSongs = data;
+  } else if (typeof data === 'object' && data !== null) {
+    if (Array.isArray(data.songs)) importedSongs = data.songs;
+    if (Array.isArray(data.grades)) importedGrades = data.grades;
+  }
+
+  if (importedSongs.length === 0) {
+    showToast('가져올 과학송 데이터가 없습니다.', 'error');
+    return;
+  }
+
+  state.songs = importedSongs.map((s, idx) => ({
+    id: s.id || uid(),
+    title: s.title || '제목 없음',
+    grade: s.grade || '중1',
+    youtubeUrl: s.youtubeUrl || '',
+    videoId: s.videoId || extractVideoId(s.youtubeUrl) || '',
+    thumbnail: s.thumbnail || (s.videoId ? getYoutubeThumbnail(s.videoId) : ''),
+    tags: Array.isArray(s.tags) ? s.tags : [],
+    order: s.order ?? idx,
+    locked: !!s.locked
+  }));
+
+  if (importedGrades && importedGrades.length > 0) {
+    state.grades = importedGrades.includes('전체') ? importedGrades : ['전체', ...importedGrades];
+  }
+
+  saveState();
+  renderAll();
+  showToast(`총 ${state.songs.length}개 과학송을 성공적으로 불러왔습니다 ✓`, 'success');
+  closeModal('dataModal');
+}
+
+function resetToDefaultData() {
+  if (!confirm('정말 기본 예시 데이터로 초기화할까요?\n수정하거나 추가한 모든 데이터가 처음 상태로 되돌아갑니다.')) return;
+  state.grades = [...DEFAULT_GRADES];
+  state.songs  = DEFAULT_SONGS.map(s => ({ ...s, locked: false }));
+  saveState();
+  renderAll();
+  showToast('기본 데이터로 초기화되었습니다.', 'warn');
+  closeModal('dataModal');
+}
+
+function saveFirebaseConfig() {
+  const input = document.getElementById('firebaseConfigInput').value.trim();
+  if (!input) {
+    showToast('Firebase 설정을 입력해 주세요.', 'error');
+    return;
+  }
+  try {
+    let configObj = null;
+    if (input.startsWith('{')) {
+      configObj = JSON.parse(input);
+    } else {
+      // JS Object literal 허용 (apiKey: '...')
+      configObj = new Function(`return (${input});`)();
+    }
+    if (!configObj || !configObj.projectId) {
+      showToast('올바른 Firebase 설정(projectId 필수)을 입력해 주세요.', 'error');
+      return;
+    }
+    localStorage.setItem(FIREBASE_CONFIG_KEY, JSON.stringify(configObj));
+    initFirebaseSync();
+    // 현재 데이터 클라우드 최초 동기화
+    saveToCloud({ grades: state.grades, songs: state.songs, updatedAt: Date.now() });
+    showToast('Firebase 클라우드 연동 성공! 실시간 동기화가 활성화되었습니다 ✓', 'success');
+  } catch(e) {
+    showToast('설정 파싱 오류: 올바른 JSON 또는 객체 형식인지 확인해 주세요.', 'error');
+  }
+}
+
+function clearFirebaseConfig() {
+  if (!confirm('Firebase 클라우드 연결을 해제할까요?')) return;
+  localStorage.removeItem(FIREBASE_CONFIG_KEY);
+  if (firestoreUnsubscribe) {
+    firestoreUnsubscribe();
+    firestoreUnsubscribe = null;
+  }
+  firestoreDb = null;
+  document.getElementById('firebaseConfigInput').value = '';
+  updateCloudBadge('local');
+  showToast('클라우드 연결이 해제되었습니다. 로컬 저장소 모드로 동작합니다.');
+}
+
+// ══════════════════════════════════════════════════════
+// 15. MODAL HELPERS
 // ══════════════════════════════════════════════════════
 function openModal(id) {
   document.getElementById(id).style.display = 'flex';
@@ -883,13 +1223,14 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
   closePlayer();
-  ['adminLoginModal', 'songModal', 'gradeModal'].forEach(id => {
-    if (document.getElementById(id).style.display !== 'none') closeModal(id);
+  ['adminLoginModal', 'songModal', 'gradeModal', 'dataModal'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.style.display !== 'none') closeModal(id);
   });
 });
 
 // ══════════════════════════════════════════════════════
-// 15. TOAST
+// 16. TOAST
 // ══════════════════════════════════════════════════════
 function showToast(msg, type = '') {
   const container = document.getElementById('toastContainer');
@@ -904,14 +1245,20 @@ function showToast(msg, type = '') {
 }
 
 // ══════════════════════════════════════════════════════
-// 16. INIT
+// 17. RENDER ALL & INIT
 // ══════════════════════════════════════════════════════
-function init() {
-  loadState();
+function renderAll() {
   renderGradeTabs();
   renderSidebarStats();
   renderPageTitle();
   renderCards();
+}
+
+function init() {
+  loadState();
+  initFirebaseSync();
+  setupYoutubeUrlAutoThumb();
+  renderAll();
 }
 
 init();
