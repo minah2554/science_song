@@ -1,5 +1,5 @@
 /* ============================================================
-   app.js — 과학송 아카이브 메인 로직  v2.1
+   app.js — 과학송 아카이브 메인 로직  v2.2
    ============================================================ */
 
 'use strict';
@@ -8,48 +8,60 @@
 // 1. CONSTANTS & STATE
 // ══════════════════════════════════════════════════════
 const STORAGE_KEY = 'scienceSongArchive_v2';
+const FIREBASE_CONFIG_KEY = 'scienceSong_firebase_config';
+const DB_NAME = 'ScienceSongMediaDB';
+const DB_VERSION = 1;
+const DB_STORE = 'videos';
+
 // 관리자 인증: SHA-256 해시로 저장 (개발자 도구 소스 노출 시 비밀번호 안전)
 const ADMIN_HASH = 'ad5f52f58ed6ec6e7a641f2416f347674ac5933470079f2a18bc6269b1e80796';
 
 // ── 기본 과학송 데이터 ──
 const DEFAULT_SONGS = [
   /* ── 중2 ── */
-  { id:'s01', grade:'중2', title:'원소기호송',              youtubeUrl:'https://www.youtube.com/watch?v=w2TJ1RBsiK0', videoId:'w2TJ1RBsiK0', thumbnail:'https://img.youtube.com/vi/w2TJ1RBsiK0/hqdefault.jpg', tags:['1단원','물질의구성'],         order:0  },
-  { id:'s02', grade:'중2', title:'이온송',                  youtubeUrl:'https://www.youtube.com/watch?v=ScxLD5UEoMA', videoId:'ScxLD5UEoMA', thumbnail:'https://img.youtube.com/vi/ScxLD5UEoMA/hqdefault.jpg', tags:['1단원','물질의구성'],         order:1  },
-  { id:'s03', grade:'중2', title:'자기력송',                youtubeUrl:'https://www.youtube.com/watch?v=2110PW3rkJw', videoId:'2110PW3rkJw', thumbnail:'https://img.youtube.com/vi/2110PW3rkJw/hqdefault.jpg', tags:['2단원','전기와자기'],         order:2  },
-  { id:'s04', grade:'중2', title:'태양계송',                youtubeUrl:'https://youtu.be/gmJ8RvIQiQc',                videoId:'gmJ8RvIQiQc', thumbnail:'https://img.youtube.com/vi/gmJ8RvIQiQc/hqdefault.jpg', tags:['3단원','태양계'],             order:3  },
-  { id:'s05', grade:'중2', title:'광합성송',                youtubeUrl:'https://www.youtube.com/watch?v=P8cGGja3sHo', videoId:'P8cGGja3sHo', thumbnail:'https://img.youtube.com/vi/P8cGGja3sHo/hqdefault.jpg', tags:['4단원','식물과에너지'],        order:4  },
-  { id:'s06', grade:'중2', title:'소화 순환 호흡 배설송',   youtubeUrl:'https://youtu.be/DO7W9upASOY',                videoId:'DO7W9upASOY', thumbnail:'https://img.youtube.com/vi/DO7W9upASOY/hqdefault.jpg', tags:['5단원','동물과에너지'],        order:5  },
-  { id:'s07', grade:'중2', title:'소화기관송',              youtubeUrl:'https://youtu.be/3adIvbguytc',                videoId:'3adIvbguytc', thumbnail:'https://img.youtube.com/vi/3adIvbguytc/hqdefault.jpg', tags:['5단원','동물과에너지'],        order:6  },
-  { id:'s08', grade:'중2', title:'물질의 특성송',           youtubeUrl:'https://youtu.be/M3sufHqzpL4',                videoId:'M3sufHqzpL4', thumbnail:'https://img.youtube.com/vi/M3sufHqzpL4/hqdefault.jpg', tags:['6단원','물질의특성'],          order:7  },
-  { id:'s09', grade:'중2', title:'해수의 순환송',           youtubeUrl:'https://youtu.be/S__Iees0hHo',                videoId:'S__Iees0hHo', thumbnail:'https://img.youtube.com/vi/S__Iees0hHo/hqdefault.jpg', tags:['7단원','수권과해수의순환'],     order:8  },
-  { id:'s10', grade:'중2', title:'수권의 구성과 해수송',    youtubeUrl:'https://youtu.be/wUkOtZdeQOQ',               videoId:'wUkOtZdeQOQ', thumbnail:'https://img.youtube.com/vi/wUkOtZdeQOQ/hqdefault.jpg', tags:['7단원','수권과해수의순환'],     order:9  },
-  { id:'s11', grade:'중2', title:'열과 우리 생활송',        youtubeUrl:'https://youtu.be/Vx_J5q2aAmg',               videoId:'Vx_J5q2aAmg', thumbnail:'https://img.youtube.com/vi/Vx_J5q2aAmg/hqdefault.jpg', tags:['8단원','열과우리생활'],         order:10 },
-  { id:'s12', grade:'중2', title:'열의 이동과 비열송',      youtubeUrl:'https://youtu.be/u5doBPQlgPg',               videoId:'u5doBPQlgPg', thumbnail:'https://img.youtube.com/vi/u5doBPQlgPg/hqdefault.jpg', tags:['8단원','열과우리생활'],         order:11 },
+  { id:'s01', grade:'중2', title:'원소기호송',              mediaType:'youtube', youtubeUrl:'https://www.youtube.com/watch?v=w2TJ1RBsiK0', videoId:'w2TJ1RBsiK0', thumbnail:'https://img.youtube.com/vi/w2TJ1RBsiK0/hqdefault.jpg', tags:['1단원','물질의구성'],         order:0  },
+  { id:'s02', grade:'중2', title:'이온송',                  mediaType:'youtube', youtubeUrl:'https://www.youtube.com/watch?v=ScxLD5UEoMA', videoId:'ScxLD5UEoMA', thumbnail:'https://img.youtube.com/vi/ScxLD5UEoMA/hqdefault.jpg', tags:['1단원','물질의구성'],         order:1  },
+  { id:'s03', grade:'중2', title:'자기력송',                mediaType:'youtube', youtubeUrl:'https://www.youtube.com/watch?v=2110PW3rkJw', videoId:'2110PW3rkJw', thumbnail:'https://img.youtube.com/vi/2110PW3rkJw/hqdefault.jpg', tags:['2단원','전기와자기'],         order:2  },
+  { id:'s04', grade:'중2', title:'태양계송',                mediaType:'youtube', youtubeUrl:'https://youtu.be/gmJ8RvIQiQc',                videoId:'gmJ8RvIQiQc', thumbnail:'https://img.youtube.com/vi/gmJ8RvIQiQc/hqdefault.jpg', tags:['3단원','태양계'],             order:3  },
+  { id:'s05', grade:'중2', title:'광합성송',                mediaType:'youtube', youtubeUrl:'https://www.youtube.com/watch?v=P8cGGja3sHo', videoId:'P8cGGja3sHo', thumbnail:'https://img.youtube.com/vi/P8cGGja3sHo/hqdefault.jpg', tags:['4단원','식물과에너지'],        order:4  },
+  { id:'s06', grade:'중2', title:'소화 순환 호흡 배설송',   mediaType:'youtube', youtubeUrl:'https://youtu.be/DO7W9upASOY',                videoId:'DO7W9upASOY', thumbnail:'https://img.youtube.com/vi/DO7W9upASOY/hqdefault.jpg', tags:['5단원','동물과에너지'],        order:5  },
+  { id:'s07', grade:'중2', title:'소화기관송',              mediaType:'youtube', youtubeUrl:'https://youtu.be/3adIvbguytc',                videoId:'3adIvbguytc', thumbnail:'https://img.youtube.com/vi/3adIvbguytc/hqdefault.jpg', tags:['5단원','동물과에너지'],        order:6  },
+  { id:'s08', grade:'중2', title:'물질의 특성송',           mediaType:'youtube', youtubeUrl:'https://youtu.be/M3sufHqzpL4',                videoId:'M3sufHqzpL4', thumbnail:'https://img.youtube.com/vi/M3sufHqzpL4/hqdefault.jpg', tags:['6단원','물질의특성'],          order:7  },
+  { id:'s09', grade:'중2', title:'해수의 순환송',           mediaType:'youtube', youtubeUrl:'https://youtu.be/S__Iees0hHo',                videoId:'S__Iees0hHo', thumbnail:'https://img.youtube.com/vi/S__Iees0hHo/hqdefault.jpg', tags:['7단원','수권과해수의순환'],     order:8  },
+  { id:'s10', grade:'중2', title:'수권의 구성과 해수송',    mediaType:'youtube', youtubeUrl:'https://youtu.be/wUkOtZdeQOQ',               videoId:'wUkOtZdeQOQ', thumbnail:'https://img.youtube.com/vi/wUkOtZdeQOQ/hqdefault.jpg', tags:['7단원','수권과해수의순환'],     order:9  },
+  { id:'s11', grade:'중2', title:'열과 우리 생활송',        mediaType:'youtube', youtubeUrl:'https://youtu.be/Vx_J5q2aAmg',               videoId:'Vx_J5q2aAmg', thumbnail:'https://img.youtube.com/vi/Vx_J5q2aAmg/hqdefault.jpg', tags:['8단원','열과우리생활'],         order:10 },
+  { id:'s12', grade:'중2', title:'열의 이동과 비열송',      mediaType:'youtube', youtubeUrl:'https://youtu.be/u5doBPQlgPg',               videoId:'u5doBPQlgPg', thumbnail:'https://img.youtube.com/vi/u5doBPQlgPg/hqdefault.jpg', tags:['8단원','열과우리생활'],         order:11 },
   /* ── 중1 ── */
-  { id:'s13', grade:'중1', title:'지구계송',                youtubeUrl:'https://youtu.be/y4Zq3pB529A',               videoId:'y4Zq3pB529A', thumbnail:'https://img.youtube.com/vi/y4Zq3pB529A/hqdefault.jpg', tags:['1단원','지권의변화'],          order:12 },
-  { id:'s14', grade:'중1', title:'암석송',                  youtubeUrl:'https://www.youtube.com/watch?v=YNalQ0fOyVw', videoId:'YNalQ0fOyVw', thumbnail:'https://img.youtube.com/vi/YNalQ0fOyVw/hqdefault.jpg', tags:['1단원','지권의변화'],          order:13 },
-  { id:'s15', grade:'중1', title:'광물송',                  youtubeUrl:'https://youtu.be/-H5uBoLp4CE',               videoId:'-H5uBoLp4CE', thumbnail:'https://img.youtube.com/vi/-H5uBoLp4CE/hqdefault.jpg', tags:['1단원','지권의변화'],          order:14 },
-  { id:'s16', grade:'중1', title:'여러 가지 힘송',          youtubeUrl:'https://youtu.be/_vAn-w2YbLg',               videoId:'_vAn-w2YbLg', thumbnail:'https://img.youtube.com/vi/_vAn-w2YbLg/hqdefault.jpg', tags:['2단원','여러가지힘'],          order:15 },
-  { id:'s17', grade:'중1', title:'생물 다양성송',           youtubeUrl:'https://youtu.be/RvIAFg_dQu4',               videoId:'RvIAFg_dQu4', thumbnail:'https://img.youtube.com/vi/RvIAFg_dQu4/hqdefault.jpg', tags:['3단원','생물의다양성'],         order:16 },
-  { id:'s18', grade:'중1', title:'기체의 성질송',           youtubeUrl:'https://www.youtube.com/watch?v=nDiXiCdIKIQ', videoId:'nDiXiCdIKIQ', thumbnail:'https://img.youtube.com/vi/nDiXiCdIKIQ/hqdefault.jpg', tags:['4단원','기체의성질'],          order:17 },
-  { id:'s19', grade:'중1', title:'분자 배열송 (상태변화송)', youtubeUrl:'https://www.youtube.com/watch?v=ekN9KcXRGMw', videoId:'ekN9KcXRGMw', thumbnail:'https://img.youtube.com/vi/ekN9KcXRGMw/hqdefault.jpg', tags:['5단원','물질의상태변화'],  order:18 },
-  { id:'s20', grade:'중1', title:'파동송',                  youtubeUrl:'https://www.youtube.com/watch?v=DpBDJlEB5V4', videoId:'DpBDJlEB5V4', thumbnail:'https://img.youtube.com/vi/DpBDJlEB5V4/hqdefault.jpg', tags:['6단원','빛과파동'],            order:19 },
+  { id:'s13', grade:'중1', title:'지구계송',                mediaType:'youtube', youtubeUrl:'https://youtu.be/y4Zq3pB529A',               videoId:'y4Zq3pB529A', thumbnail:'https://img.youtube.com/vi/y4Zq3pB529A/hqdefault.jpg', tags:['1단원','지권의변화'],          order:12 },
+  { id:'s14', grade:'중1', title:'암석송',                  mediaType:'youtube', youtubeUrl:'https://www.youtube.com/watch?v=YNalQ0fOyVw', videoId:'YNalQ0fOyVw', thumbnail:'https://img.youtube.com/vi/YNalQ0fOyVw/hqdefault.jpg', tags:['1단원','지권의변화'],          order:13 },
+  { id:'s15', grade:'중1', title:'광물송',                  mediaType:'youtube', youtubeUrl:'https://youtu.be/-H5uBoLp4CE',               videoId:'-H5uBoLp4CE', thumbnail:'https://img.youtube.com/vi/-H5uBoLp4CE/hqdefault.jpg', tags:['1단원','지권의변화'],          order:14 },
+  { id:'s16', grade:'중1', title:'여러 가지 힘송',          mediaType:'youtube', youtubeUrl:'https://youtu.be/_vAn-w2YbLg',               videoId:'_vAn-w2YbLg', thumbnail:'https://img.youtube.com/vi/_vAn-w2YbLg/hqdefault.jpg', tags:['2단원','여러가지힘'],          order:15 },
+  { id:'s17', grade:'중1', title:'생물 다양성송',           mediaType:'youtube', youtubeUrl:'https://youtu.be/RvIAFg_dQu4',               videoId:'RvIAFg_dQu4', thumbnail:'https://img.youtube.com/vi/RvIAFg_dQu4/hqdefault.jpg', tags:['3단원','생물의다양성'],         order:16 },
+  { id:'s18', grade:'중1', title:'기체의 성질송',           mediaType:'youtube', youtubeUrl:'https://www.youtube.com/watch?v=nDiXiCdIKIQ', videoId:'nDiXiCdIKIQ', thumbnail:'https://img.youtube.com/vi/nDiXiCdIKIQ/hqdefault.jpg', tags:['4단원','기체의성질'],          order:17 },
+  { id:'s19', grade:'중1', title:'분자 배열송 (상태변화송)', mediaType:'youtube', youtubeUrl:'https://www.youtube.com/watch?v=ekN9KcXRGMw', videoId:'ekN9KcXRGMw', thumbnail:'https://img.youtube.com/vi/ekN9KcXRGMw/hqdefault.jpg', tags:['5단원','물질의상태변화'],  order:18 },
+  { id:'s20', grade:'중1', title:'파동송',                  mediaType:'youtube', youtubeUrl:'https://www.youtube.com/watch?v=DpBDJlEB5V4', videoId:'DpBDJlEB5V4', thumbnail:'https://img.youtube.com/vi/DpBDJlEB5V4/hqdefault.jpg', tags:['6단원','빛과파동'],            order:19 },
 ];
 
 const DEFAULT_GRADES = ['전체', '중1', '중2', '중3'];
 
 let state = {
-  grades:       [...DEFAULT_GRADES],
-  songs:        DEFAULT_SONGS.map(s => ({ ...s, locked: false })),
-  currentGrade: '전체',
-  isAdmin:      false,
-  editingId:    null,
-  currentTags:  [],
-  sortBy:       'default'
+  grades:             [...DEFAULT_GRADES],
+  songs:              DEFAULT_SONGS.map(s => ({ ...s, locked: false })),
+  currentGrade:       '전체',
+  isAdmin:            false,
+  editingId:          null,
+  currentTags:        [],
+  sortBy:             'default',
+  currentMediaType:   'youtube', // 'youtube' | 'file'
+  selectedVideoFile:  null,
+  selectedThumbData:  ''
 };
 
 let sortableInstance = null;
+let firestoreDb = null;
+let firestoreUnsubscribe = null;
+let syncBroadcast = null;
+let currentVideoObjectUrl = null;
 
 // ── 태그 색상 팔레트 ──
 const UNIT_COLORS = [
@@ -65,7 +77,8 @@ const UNIT_COLORS = [
 const CONTENT_TAG_COLOR = { bg: '#EEE5F5', border: '#CDB0DC', text: '#6A3578' };
 
 function getTagColor(tag) {
-  const m = tag.match(/^(\d+)단원$/);
+  if (!tag) return CONTENT_TAG_COLOR;
+  const m = String(tag).match(/^(\d+)단원$/);
   if (m) {
     const idx = Math.max(0, parseInt(m[1]) - 1) % UNIT_COLORS.length;
     return UNIT_COLORS[idx];
@@ -74,25 +87,82 @@ function getTagColor(tag) {
 }
 
 function getUnitNumber(song) {
-  if (!song.tags) return 999;
+  if (!song || !song.tags) return 999;
   for (const tag of song.tags) {
-    const m = tag.match(/^(\d+)단원$/);
+    const m = String(tag).match(/^(\d+)단원$/);
     if (m) return parseInt(m[1]);
   }
   return 999;
 }
 
 // ══════════════════════════════════════════════════════
-// 2. PERSISTENCE & REAL-TIME SYNC
+// 2. INDEXEDDB (동영상 파일 대용량 저장소)
 // ══════════════════════════════════════════════════════
-const FIREBASE_CONFIG_KEY = 'scienceSong_firebase_config';
-let firestoreDb = null;
-let firestoreUnsubscribe = null;
-let syncBroadcast = null;
+function openMediaDB() {
+  return new Promise((resolve, reject) => {
+    if (!window.indexedDB) {
+      resolve(null);
+      return;
+    }
+    const req = window.indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(DB_STORE)) {
+        db.createObjectStore(DB_STORE);
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => resolve(null);
+  });
+}
 
+async function saveVideoBlob(id, fileOrBlob) {
+  const db = await openMediaDB();
+  if (!db) return false;
+  return new Promise((resolve) => {
+    try {
+      const tx = db.transaction(DB_STORE, 'readwrite');
+      const store = tx.objectStore(DB_STORE);
+      store.put(fileOrBlob, id);
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => resolve(false);
+    } catch(e) {
+      resolve(false);
+    }
+  });
+}
+
+async function getVideoBlob(id) {
+  const db = await openMediaDB();
+  if (!db) return null;
+  return new Promise((resolve) => {
+    try {
+      const tx = db.transaction(DB_STORE, 'readonly');
+      const store = tx.objectStore(DB_STORE);
+      const req = store.get(id);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => resolve(null);
+    } catch(e) {
+      resolve(null);
+    }
+  });
+}
+
+async function deleteVideoBlob(id) {
+  const db = await openMediaDB();
+  if (!db) return;
+  try {
+    const tx = db.transaction(DB_STORE, 'readwrite');
+    tx.objectStore(DB_STORE).delete(id);
+  } catch(e) {}
+}
+
+// ══════════════════════════════════════════════════════
+// 3. PERSISTENCE & REAL-TIME SYNC
+// ══════════════════════════════════════════════════════
 try {
   if (typeof BroadcastChannel !== 'undefined') {
-    syncBroadcast = new BroadcastChannel('science_song_sync_channel');
+    syncBroadcast = new BroadcastChannel('science_song_sync_v2');
     syncBroadcast.onmessage = (event) => {
       if (event.data && event.data.type === 'STATE_UPDATED') {
         loadState();
@@ -119,7 +189,7 @@ function saveState(skipCloud = false) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
   } catch(e) {
-    console.warn('LocalStorage 저장 실패:', e);
+    console.warn('LocalStorage 저장 경고:', e);
   }
 
   // 다른 탭으로 실시간 전파
@@ -141,7 +211,6 @@ function loadState() {
     if (!raw) return;
     const saved = JSON.parse(raw);
     if (saved.grades && Array.isArray(saved.grades) && saved.grades.length > 0) {
-      // '전체' 탭 보장
       const validGrades = saved.grades.includes('전체') ? saved.grades : ['전체', ...saved.grades];
       state.grades = validGrades;
     }
@@ -149,11 +218,12 @@ function loadState() {
       state.songs = saved.songs.map((s, idx) => ({
         locked: false,
         order: s.order ?? idx,
+        mediaType: s.mediaType || (s.videoId || s.youtubeUrl ? 'youtube' : 'file'),
         ...s
       }));
     }
   } catch(e) {
-    console.warn('LocalStorage 불러오기 오류:', e);
+    console.warn('LocalStorage 로드 오류:', e);
   }
 }
 
@@ -183,26 +253,26 @@ function initFirebaseSync() {
       firestoreUnsubscribe = null;
     }
 
-    // Firestore 실시간 스냅샷 리스너 (원격 변경 실시간 감지)
+    // Firestore 실시간 스냅샷 리스너
     firestoreUnsubscribe = firestoreDb.collection('archive').doc('main').onSnapshot((doc) => {
       if (doc.exists) {
         const remoteData = doc.data();
         if (remoteData && remoteData.songs && Array.isArray(remoteData.songs)) {
-          // 로컬 데이터보다 최신이거나 첫 로드 시 반영
           state.songs = remoteData.songs.map((s, idx) => ({
             locked: false,
             order: s.order ?? idx,
+            mediaType: s.mediaType || (s.videoId || s.youtubeUrl ? 'youtube' : 'file'),
             ...s
           }));
           if (remoteData.grades && Array.isArray(remoteData.grades)) {
             state.grades = remoteData.grades;
           }
-          saveState(true); // 로컬스토리지에 캐시하고 클라우드 재전송은 스킵
+          saveState(true);
           renderAll();
         }
       }
     }, (err) => {
-      console.warn('Firestore 실시간 구독 에러:', err);
+      console.warn('Firestore 동기화 에러:', err);
       updateCloudBadge('error');
     });
   } catch (err) {
@@ -240,9 +310,8 @@ function updateCloudBadge(status) {
   }
 }
 
-
 // ══════════════════════════════════════════════════════
-// 3. UTILS
+// 4. UTILS & VIDEO PROCESSING
 // ══════════════════════════════════════════════════════
 function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -267,8 +336,9 @@ function getYoutubeThumbnail(videoId) {
   return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
 }
 
+// 광고 최소화: 개인정보 보호 모드(youtube-nocookie.com) 및 플레이어 최적화 파라미터 적용
 function getYoutubeEmbedUrl(videoId) {
-  return `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+  return `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&iv_load_policy=3`;
 }
 
 function escapeHtml(str = '') {
@@ -277,29 +347,68 @@ function escapeHtml(str = '') {
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// SHA-256 해시 유틸 (Web Crypto API — 브라우저 개발자 도구에 비밀번호가 원문으로 노출되지 않음)
 async function sha256(str) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// 태그 정렬 유틸: 학년(뱃지) -> 단원(#N단원) -> 단원명 -> 추가입력 순서
 function sortTags(tags = []) {
   const unitTags = [];
   const otherTags = [];
   tags.forEach(t => {
-    if (/^\d+단원$/.test(t.trim())) {
-      unitTags.push(t.trim());
-    } else {
-      otherTags.push(t.trim());
+    const item = String(t).trim();
+    if (/^\d+단원$/.test(item)) {
+      unitTags.push(item);
+    } else if (item) {
+      otherTags.push(item);
     }
   });
   unitTags.sort((a, b) => parseInt(a) - parseInt(b));
   return [...unitTags, ...otherTags];
 }
 
+// ── 업로드된 동영상 파일에서 썸네일 프레임 자동 캡처 ──
+function captureVideoFrame(file) {
+  return new Promise((resolve) => {
+    try {
+      const video = document.createElement('video');
+      const objectUrl = URL.createObjectURL(file);
+      video.src = objectUrl;
+      video.muted = true;
+      video.playsInline = true;
+
+      video.addEventListener('loadeddata', () => {
+        video.currentTime = Math.min(1.0, video.duration > 1 ? 1.0 : 0.2);
+      });
+
+      video.addEventListener('seeked', () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth || 640;
+          canvas.height = video.videoHeight || 360;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          URL.revokeObjectURL(objectUrl);
+          resolve(dataUrl);
+        } catch(err) {
+          URL.revokeObjectURL(objectUrl);
+          resolve('');
+        }
+      });
+
+      video.addEventListener('error', () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve('');
+      });
+    } catch(e) {
+      resolve('');
+    }
+  });
+}
+
 // ══════════════════════════════════════════════════════
-// 4. SORT
+// 5. SORT
 // ══════════════════════════════════════════════════════
 function setSortBy(sortType) {
   state.sortBy = sortType;
@@ -313,7 +422,6 @@ function setSortBy(sortType) {
 function getFilteredSongs() {
   let songs = [...state.songs];
 
-  // 일반 사용자 화면에서는 잠긴 과학송을 아예 목록에서 제외 (완전 숨김)
   if (!state.isAdmin) {
     songs = songs.filter(s => !s.locked);
   }
@@ -342,11 +450,13 @@ function getFilteredSongs() {
 }
 
 // ══════════════════════════════════════════════════════
-// 5. RENDER HELPERS
+// 6. RENDER HELPERS
 // ══════════════════════════════════════════════════════
 function renderGradeTabs() {
   const nav    = document.getElementById('gradeNav');
   const mobile = document.getElementById('mobileGradeBar');
+  if (!nav || !mobile) return;
+
   nav.innerHTML    = '';
   mobile.innerHTML = '';
 
@@ -357,7 +467,7 @@ function renderGradeTabs() {
     const isAllLocked = allGradeSongs.length > 0 && allGradeSongs.every(s => s.locked);
     const lockedCount = allGradeSongs.filter(s => s.locked).length;
 
-    // ── Desktop tab ──
+    // Desktop tab
     const btn = document.createElement('button');
     btn.className = 'grade-tab' + (grade === state.currentGrade ? ' active' : '');
     btn.setAttribute('aria-current', grade === state.currentGrade ? 'page' : 'false');
@@ -391,7 +501,7 @@ function renderGradeTabs() {
     btn.addEventListener('click', () => selectGrade(grade));
     nav.appendChild(btn);
 
-    // ── Mobile tab ──
+    // Mobile tab
     const mBtn = document.createElement('button');
     mBtn.className = 'mobile-grade-tab' + (grade === state.currentGrade ? ' active' : '');
     mBtn.dataset.grade = grade;
@@ -404,7 +514,7 @@ function renderGradeTabs() {
     mobile.appendChild(mBtn);
   });
 
-  // ── Admin: 학년 관리 버튼 ──
+  // Admin: 학년 관리 버튼
   if (state.isAdmin) {
     const sep = document.createElement('div');
     sep.style.cssText = 'border-top:1px solid var(--line); margin: 10px 0 6px;';
@@ -417,7 +527,7 @@ function renderGradeTabs() {
       <span style="display:flex;align-items:center;gap:6px;">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="3"/>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
         </svg>
         학년 관리
       </span>
@@ -429,6 +539,7 @@ function renderGradeTabs() {
 
 function renderSidebarStats() {
   const el = document.getElementById('sidebarStats');
+  if (!el) return;
   const visibleSongs = state.isAdmin ? state.songs : state.songs.filter(s => !s.locked);
   const total      = visibleSongs.length;
   const gradeCount = state.grades.filter(g => g !== '전체').length;
@@ -437,6 +548,7 @@ function renderSidebarStats() {
 
 function renderPageTitle() {
   const area  = document.getElementById('pageTitleArea');
+  if (!area) return;
   const grade = state.currentGrade;
 
   if (grade === '전체') {
@@ -471,7 +583,6 @@ function renderPageTitle() {
     const songs = state.isAdmin ? gradeSongs : gradeSongs.filter(s => !s.locked);
     const total = songs.length;
 
-    // 단원 분포 계산
     const unitMap = {};
     songs.forEach(s => {
       (s.tags || []).forEach(t => {
@@ -506,8 +617,9 @@ function renderPageTitle() {
 function renderCards() {
   const grid  = document.getElementById('cardsGrid');
   const empty = document.getElementById('emptyState');
-  const songs = getFilteredSongs();
+  if (!grid || !empty) return;
 
+  const songs = getFilteredSongs();
   grid.innerHTML = '';
 
   if (songs.length === 0) {
@@ -528,19 +640,18 @@ function createCardElement(song, idx) {
   const card = document.createElement('div');
   card.className = 'song-card' + (song.locked ? ' song-card--locked' : '');
   card.dataset.id = song.id;
-  card.style.animationDelay = `${idx * 0.04}s`;
+  card.style.animationDelay = `${idx * 0.03}s`;
 
-  // 썸네일 HTML
-  const thumbHtml = song.thumbnail
-    ? `<img class="card-thumb" src="${song.thumbnail}" alt="${escapeHtml(song.title)} 썸네일"
-           onerror="this.outerHTML=\`<div class='thumb-fallback'><img src='음표 아이콘.png' alt='' /><span>썸네일 없음</span></div>\`"
-           loading="lazy" />`
-    : `<div class="thumb-fallback">
-         <img src="음표 아이콘.png" alt="" />
-         <span>썸네일 없음</span>
-       </div>`;
+  const isFileMedia = song.mediaType === 'file' || song.hasVideoFile;
 
-  // 태그 HTML (색상 적용 및 학년 -> 단원 -> 단원명 -> 추가입력 자동 정렬)
+  // 썸네일 엘리먼트 생성
+  let thumbHtml = '';
+  if (song.thumbnail) {
+    thumbHtml = `<img class="card-thumb" src="${escapeHtml(song.thumbnail)}" alt="${escapeHtml(song.title)} 썸네일" loading="lazy" />`;
+  } else {
+    thumbHtml = `<div class="thumb-fallback"><img src="음표 아이콘.png" alt="" /><span>${isFileMedia ? '동영상 파일' : '썸네일 없음'}</span></div>`;
+  }
+
   const sortedTags = sortTags(song.tags || []);
   const tagsHtml = !song.locked && sortedTags.length > 0
     ? sortedTags.map(t => {
@@ -553,7 +664,6 @@ function createCardElement(song, idx) {
     ? `<span class="card-grade-badge">${escapeHtml(song.grade)}</span>`
     : '';
 
-  // 잠금 오버레이
   const lockOverlay = song.locked
     ? `<div class="lock-overlay">
          <div class="lock-icon-wrap">
@@ -565,7 +675,6 @@ function createCardElement(song, idx) {
        </div>`
     : '';
 
-  // 카드 잠금 버튼 (관리자)
   const lockBtnHtml = state.isAdmin
     ? `<button class="card-lock-btn${song.locked ? ' is-locked' : ''}"
                data-id="${song.id}"
@@ -578,6 +687,13 @@ function createCardElement(song, idx) {
        </button>`
     : '';
 
+  const sourceBadgeHtml = isFileMedia
+    ? `<span class="card-source-badge">
+         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+         영상 파일
+       </span>`
+    : '';
+
   card.innerHTML = `
     <button class="card-edit-btn" data-edit="${song.id}" title="편집" aria-label="편집">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--point-deep)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -588,6 +704,7 @@ function createCardElement(song, idx) {
     ${lockBtnHtml}
     <div class="card-thumb-wrap">
       ${thumbHtml}
+      ${sourceBadgeHtml}
       ${lockOverlay}
       ${!song.locked ? `<div class="play-overlay">
         <div class="play-btn-circle">
@@ -607,6 +724,14 @@ function createCardElement(song, idx) {
     </div>
   `;
 
+  // 썸네일 이미지 로드 실패 시 안전 폴백
+  const imgEl = card.querySelector('img.card-thumb');
+  if (imgEl) {
+    imgEl.addEventListener('error', () => {
+      imgEl.outerHTML = `<div class="thumb-fallback"><img src="음표 아이콘.png" alt="" /><span>썸네일 없음</span></div>`;
+    });
+  }
+
   card.addEventListener('click', (e) => {
     const editBtn = e.target.closest('.card-edit-btn');
     const lockBtn = e.target.closest('.card-lock-btn');
@@ -622,7 +747,6 @@ function createCardElement(song, idx) {
       return;
     }
     if (state.isAdmin) {
-      // 관리자 모드에서는 카드 전체 클릭 시 바로 편집창 열림
       openEditModal(song.id);
       return;
     }
@@ -637,7 +761,7 @@ function createCardElement(song, idx) {
 }
 
 // ══════════════════════════════════════════════════════
-// 6. LOCK MANAGEMENT
+// 7. LOCK MANAGEMENT
 // ══════════════════════════════════════════════════════
 function toggleSongLock(id) {
   const song = state.songs.find(s => s.id === id);
@@ -662,7 +786,7 @@ function toggleGradeLock(grade, lock) {
 }
 
 // ══════════════════════════════════════════════════════
-// 7. GRADE NAVIGATION
+// 8. GRADE NAVIGATION
 // ══════════════════════════════════════════════════════
 function selectGrade(grade) {
   state.currentGrade = grade;
@@ -672,7 +796,7 @@ function selectGrade(grade) {
 }
 
 // ══════════════════════════════════════════════════════
-// 8. ADMIN AUTH
+// 9. ADMIN AUTH
 // ══════════════════════════════════════════════════════
 function openAdminLogin() {
   if (state.isAdmin) { exitAdmin(); return; }
@@ -728,46 +852,82 @@ function exitAdmin() {
 }
 
 // ══════════════════════════════════════════════════════
-// 9. DRAG & DROP (SortableJS)
+// 10. DRAG & DROP (SortableJS 안전 래핑)
 // ══════════════════════════════════════════════════════
 function setupSortable() {
   if (sortableInstance) { sortableInstance.destroy(); sortableInstance = null; }
   if (!state.isAdmin || state.sortBy !== 'default') return;
+  if (typeof Sortable === 'undefined' || !Sortable || !Sortable.create) return;
 
   const grid = document.getElementById('cardsGrid');
-  sortableInstance = Sortable.create(grid, {
-    animation: 200,
-    ghostClass: 'sortable-ghost',
-    dragClass:  'sortable-drag',
-    handle:     '.song-card',
-    onEnd() {
-      const cards    = grid.querySelectorAll('.song-card');
-      const newOrder = [...cards].map(c => c.dataset.id);
-      newOrder.forEach((id, idx) => {
-        const song = state.songs.find(s => s.id === id);
-        if (song) song.order = idx;
-      });
-      saveState();
-      showToast('순서가 변경되었습니다 ✓', 'success');
-    }
-  });
+  if (!grid) return;
+
+  try {
+    sortableInstance = Sortable.create(grid, {
+      animation: 200,
+      ghostClass: 'sortable-ghost',
+      dragClass:  'sortable-drag',
+      handle:     '.song-card',
+      onEnd() {
+        const cards    = grid.querySelectorAll('.song-card');
+        const newOrder = [...cards].map(c => c.dataset.id);
+        newOrder.forEach((id, idx) => {
+          const song = state.songs.find(s => s.id === id);
+          if (song) song.order = idx;
+        });
+        saveState();
+        showToast('순서가 변경되었습니다 ✓', 'success');
+      }
+    });
+  } catch(e) {}
 }
 
 // ══════════════════════════════════════════════════════
-// 10. PLAYER
+// 11. HYBRID PLAYER (YouTube & HTML5 Video)
 // ══════════════════════════════════════════════════════
-function playSong(song) {
+async function playSong(song) {
   if (state.isAdmin) return;
   if (song.locked) { showToast('잠긴 과학송입니다 🔒', 'warn'); return; }
 
-  const videoId = song.videoId || extractVideoId(song.youtubeUrl);
-  if (!videoId) {
-    if (song.youtubeUrl) window.open(song.youtubeUrl, '_blank');
-    else showToast('재생할 영상 정보가 없습니다.', 'error');
-    return;
+  const youtubeIframe = document.getElementById('youtubeIframe');
+  const videoPlayer   = document.getElementById('html5VideoPlayer');
+  const isFileMedia   = song.mediaType === 'file' || song.hasVideoFile;
+
+  if (currentVideoObjectUrl) {
+    URL.revokeObjectURL(currentVideoObjectUrl);
+    currentVideoObjectUrl = null;
   }
 
-  document.getElementById('youtubeIframe').src = getYoutubeEmbedUrl(videoId);
+  if (isFileMedia) {
+    // 📁 자체 업로드 동영상 재생 (광고 0% HTML5 플레이어)
+    youtubeIframe.style.display = 'none';
+    youtubeIframe.src = '';
+    videoPlayer.style.display = 'block';
+
+    const blob = await getVideoBlob(song.id);
+    if (!blob) {
+      showToast('이 기기에서 등록된 영상 파일을 찾을 수 없습니다.', 'error');
+      return;
+    }
+    currentVideoObjectUrl = URL.createObjectURL(blob);
+    videoPlayer.src = currentVideoObjectUrl;
+    videoPlayer.play().catch(() => {});
+  } else {
+    // 🎬 YouTube 임베드 재생 (광고 최소화 도메인 적용)
+    videoPlayer.pause();
+    videoPlayer.src = '';
+    videoPlayer.style.display = 'none';
+    youtubeIframe.style.display = 'block';
+
+    const videoId = song.videoId || extractVideoId(song.youtubeUrl);
+    if (!videoId) {
+      if (song.youtubeUrl) window.open(song.youtubeUrl, '_blank');
+      else showToast('재생할 영상 정보가 없습니다.', 'error');
+      return;
+    }
+    youtubeIframe.src = getYoutubeEmbedUrl(videoId);
+  }
+
   document.getElementById('playerModalTitle').textContent = song.title;
 
   const sortedTags = sortTags(song.tags || []);
@@ -788,22 +948,47 @@ function playSong(song) {
 }
 
 function closePlayer() {
-  document.getElementById('youtubeIframe').src = '';
+  const youtubeIframe = document.getElementById('youtubeIframe');
+  const videoPlayer   = document.getElementById('html5VideoPlayer');
+  if (youtubeIframe) youtubeIframe.src = '';
+  if (videoPlayer) {
+    videoPlayer.pause();
+    videoPlayer.src = '';
+  }
+  if (currentVideoObjectUrl) {
+    URL.revokeObjectURL(currentVideoObjectUrl);
+    currentVideoObjectUrl = null;
+  }
   closeModal('playerModal');
 }
 
 // ══════════════════════════════════════════════════════
-// 11. ADD / EDIT MODAL
+// 12. ADD / EDIT MODAL & MEDIA UPLOAD
 // ══════════════════════════════════════════════════════
+function setMediaType(type) {
+  state.currentMediaType = type;
+  document.getElementById('mediaTypeTabYoutube').classList.toggle('active', type === 'youtube');
+  document.getElementById('mediaTypeTabFile').classList.toggle('active', type === 'file');
+  document.getElementById('youtubeUrlGroup').style.display = (type === 'youtube' ? 'block' : 'none');
+  document.getElementById('fileUploadGroup').style.display = (type === 'file' ? 'block' : 'none');
+}
+
 function openAddModal() {
-  state.editingId   = null;
-  state.currentTags = [];
+  state.editingId          = null;
+  state.currentTags        = [];
+  state.selectedVideoFile  = null;
+  state.selectedThumbData  = '';
+
   document.getElementById('songModalTitle').textContent      = '과학송 추가';
   document.getElementById('deleteSongBtn').style.display    = 'none';
   document.getElementById('songYoutubeUrl').value           = '';
   document.getElementById('songTitle').value                = '';
+  document.getElementById('customYoutubeThumbUrl').value    = '';
+  document.getElementById('selectedFileInfo').style.display = 'none';
   document.getElementById('thumbPreviewArea').style.display = 'none';
   document.getElementById('thumbPreviewImg').src            = '';
+
+  setMediaType('youtube');
   renderTagList();
   populateGradeSelect();
   openModal('songModal');
@@ -814,13 +999,27 @@ function openEditModal(id) {
   const song = state.songs.find(s => s.id === id);
   if (!song) return;
 
-  state.editingId   = id;
-  state.currentTags = [...(song.tags || [])];
+  state.editingId          = id;
+  state.currentTags        = [...(song.tags || [])];
+  state.selectedVideoFile  = null;
+  state.selectedThumbData  = song.thumbnail || '';
 
   document.getElementById('songModalTitle').textContent   = '과학송 편집';
   document.getElementById('deleteSongBtn').style.display = '';
   document.getElementById('songYoutubeUrl').value        = song.youtubeUrl || '';
   document.getElementById('songTitle').value             = song.title || '';
+  document.getElementById('customYoutubeThumbUrl').value = '';
+
+  const isFileMedia = song.mediaType === 'file' || song.hasVideoFile;
+  setMediaType(isFileMedia ? 'file' : 'youtube');
+
+  if (isFileMedia && song.videoFileName) {
+    document.getElementById('selectedFileName').querySelector('span').textContent = song.videoFileName;
+    document.getElementById('selectedFileSize').textContent = song.videoFileSize ? `(${song.videoFileSize})` : '';
+    document.getElementById('selectedFileInfo').style.display = 'flex';
+  } else {
+    document.getElementById('selectedFileInfo').style.display = 'none';
+  }
 
   if (song.thumbnail) {
     document.getElementById('thumbPreviewImg').src             = song.thumbnail;
@@ -846,17 +1045,68 @@ function populateGradeSelect(selectedGrade = '') {
   });
 }
 
+// ── 동영상 파일 선택 핸들러 & 썸네일 자동 캡처 ──
+async function handleVideoFileSelect(e) {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+
+  state.selectedVideoFile = file;
+  const fileName = file.name;
+  const fileSizeMb = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
+
+  document.getElementById('selectedFileName').querySelector('span').textContent = fileName;
+  document.getElementById('selectedFileSize').textContent = `(${fileSizeMb})`;
+  document.getElementById('selectedFileInfo').style.display = 'flex';
+
+  // 노래 제목 자동 채우기 (비어있는 경우 파일명에서 확장자 제거 후 적용)
+  const titleInput = document.getElementById('songTitle');
+  if (!titleInput.value.trim()) {
+    titleInput.value = fileName.replace(/\.[^/.]+$/, '');
+  }
+
+  showToast('동영상 썸네일을 캡처하는 중...', '');
+  const thumbData = await captureVideoFrame(file);
+  if (thumbData) {
+    state.selectedThumbData = thumbData;
+    document.getElementById('thumbPreviewImg').src = thumbData;
+    document.getElementById('thumbPreviewArea').style.display = '';
+    showToast('영상 첫 프레임에서 썸네일을 자동 추출했습니다 ✓', 'success');
+  }
+}
+
+function clearSelectedVideoFile() {
+  state.selectedVideoFile = null;
+  document.getElementById('videoFileInput').value = '';
+  document.getElementById('selectedFileInfo').style.display = 'none';
+}
+
+function fetchCustomYoutubeThumb() {
+  const url = document.getElementById('customYoutubeThumbUrl').value.trim();
+  const videoId = extractVideoId(url);
+  if (!videoId) {
+    showToast('올바른 유튜브 링크를 입력해 주세요.', 'error');
+    return;
+  }
+  const thumb = getYoutubeThumbnail(videoId);
+  state.selectedThumbData = thumb;
+  document.getElementById('thumbPreviewImg').src = thumb;
+  document.getElementById('thumbPreviewArea').style.display = '';
+  showToast('유튜브 썸네일을 가져왔습니다 ✓', 'success');
+}
+
 function fetchYoutubeThumbnail() {
   const url     = document.getElementById('songYoutubeUrl').value.trim();
   const videoId = extractVideoId(url);
   if (!videoId) { showToast('올바른 YouTube URL을 입력해 주세요.', 'error'); return; }
   const thumb = getYoutubeThumbnail(videoId);
+  state.selectedThumbData = thumb;
   document.getElementById('thumbPreviewImg').src             = thumb;
   document.getElementById('thumbPreviewArea').style.display = '';
   showToast('썸네일을 가져왔습니다 ✓', 'success');
 }
 
 function clearThumbnail() {
+  state.selectedThumbData = '';
   document.getElementById('thumbPreviewImg').src             = '';
   document.getElementById('thumbPreviewArea').style.display = 'none';
 }
@@ -869,6 +1119,7 @@ function setupYoutubeUrlAutoThumb() {
     const videoId = extractVideoId(url);
     if (videoId) {
       const thumb = getYoutubeThumbnail(videoId);
+      state.selectedThumbData = thumb;
       document.getElementById('thumbPreviewImg').src = thumb;
       document.getElementById('thumbPreviewArea').style.display = '';
     }
@@ -877,33 +1128,62 @@ function setupYoutubeUrlAutoThumb() {
   input.addEventListener('paste', () => setTimeout(updateThumb, 50));
 }
 
-function saveSong() {
-  const url   = document.getElementById('songYoutubeUrl').value.trim();
+// ── 과학송 저장 로직 ──
+async function saveSong() {
   const title = document.getElementById('songTitle').value.trim();
   const grade = document.getElementById('songGrade').value;
 
-  if (!url)   { showToast('유튜브 URL을 입력해 주세요.', 'error'); return; }
   if (!title) { showToast('노래 제목을 입력해 주세요.', 'error'); return; }
   if (!grade) { showToast('학년을 선택해 주세요.', 'error'); return; }
 
-  const videoId   = extractVideoId(url) || '';
-  const thumbSrc  = document.getElementById('thumbPreviewImg').src || '';
+  const isFileMode = state.currentMediaType === 'file';
+  let url = '';
+  let videoId = '';
+  let videoFileName = '';
+  let videoFileSize = '';
+
+  if (isFileMode) {
+    if (!state.editingId && !state.selectedVideoFile) {
+      showToast('등록할 영상 파일을 선택해 주세요.', 'error');
+      return;
+    }
+    if (state.selectedVideoFile) {
+      videoFileName = state.selectedVideoFile.name;
+      videoFileSize = (state.selectedVideoFile.size / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+  } else {
+    url = document.getElementById('songYoutubeUrl').value.trim();
+    if (!url) { showToast('유튜브 URL을 입력해 주세요.', 'error'); return; }
+    videoId = extractVideoId(url) || '';
+  }
+
+  const thumbSrc  = document.getElementById('thumbPreviewImg').src || state.selectedThumbData || '';
   const thumbnail = (thumbSrc && !thumbSrc.endsWith('undefined') && thumbSrc !== window.location.href)
     ? thumbSrc
     : (videoId ? getYoutubeThumbnail(videoId) : '');
 
   const processedTags = sortTags(state.currentTags);
+  const songId = state.editingId || uid();
+
+  if (isFileMode && state.selectedVideoFile) {
+    await saveVideoBlob(songId, state.selectedVideoFile);
+  }
 
   if (state.editingId) {
     const idx = state.songs.findIndex(s => s.id === state.editingId);
     if (idx !== -1) {
+      const prev = state.songs[idx];
       state.songs[idx] = {
-        ...state.songs[idx],
+        ...prev,
         title,
         grade,
-        youtubeUrl: url,
-        videoId: videoId || state.songs[idx].videoId,
-        thumbnail: thumbnail || (videoId ? getYoutubeThumbnail(videoId) : state.songs[idx].thumbnail),
+        mediaType: isFileMode ? 'file' : 'youtube',
+        youtubeUrl: isFileMode ? '' : url,
+        videoId: isFileMode ? '' : (videoId || prev.videoId),
+        videoFileName: isFileMode ? (videoFileName || prev.videoFileName || '') : '',
+        videoFileSize: isFileMode ? (videoFileSize || prev.videoFileSize || '') : '',
+        hasVideoFile: isFileMode,
+        thumbnail: thumbnail || prev.thumbnail || (videoId ? getYoutubeThumbnail(videoId) : ''),
         tags: processedTags
       };
     }
@@ -911,11 +1191,15 @@ function saveSong() {
   } else {
     const maxOrder = state.songs.reduce((m, s) => Math.max(m, s.order ?? 0), -1);
     state.songs.push({
-      id: uid(),
+      id: songId,
       title,
       grade,
+      mediaType: isFileMode ? 'file' : 'youtube',
       youtubeUrl: url,
       videoId,
+      videoFileName,
+      videoFileSize,
+      hasVideoFile: isFileMode,
       thumbnail: thumbnail || (videoId ? getYoutubeThumbnail(videoId) : ''),
       tags: processedTags,
       order: maxOrder + 1,
@@ -929,10 +1213,12 @@ function saveSong() {
   renderAll();
 }
 
-function deleteSong() {
+async function deleteSong() {
   if (!state.editingId) return;
   if (!confirm('이 과학송을 삭제할까요?')) return;
-  state.songs = state.songs.filter(s => s.id !== state.editingId);
+  const targetId = state.editingId;
+  state.songs = state.songs.filter(s => s.id !== targetId);
+  await deleteVideoBlob(targetId);
   saveState();
   closeModal('songModal');
   renderAll();
@@ -940,7 +1226,7 @@ function deleteSong() {
 }
 
 // ══════════════════════════════════════════════════════
-// 12. TAG INPUT
+// 13. TAG INPUT
 // ══════════════════════════════════════════════════════
 function handleTagInput(e) {
   if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addTagFromInput(); }
@@ -972,7 +1258,7 @@ function renderTagList() {
 }
 
 // ══════════════════════════════════════════════════════
-// 13. GRADE MANAGEMENT
+// 14. GRADE MANAGEMENT
 // ══════════════════════════════════════════════════════
 function openGradeModal() {
   renderGradeManageList();
@@ -1025,7 +1311,7 @@ function removeGrade(grade) {
 }
 
 // ══════════════════════════════════════════════════════
-// 14. DATA & CLOUD MANAGEMENT
+// 15. DATA & CLOUD MANAGEMENT
 // ══════════════════════════════════════════════════════
 function openDataModal() {
   const savedConfig = localStorage.getItem(FIREBASE_CONFIG_KEY) || '';
@@ -1040,7 +1326,7 @@ function exportDataJson() {
     grades: state.grades,
     songs: state.songs,
     exportedAt: new Date().toISOString(),
-    version: '2.1'
+    version: '2.2'
   };
   const jsonStr = JSON.stringify(data, null, 2);
   const blob = new Blob([jsonStr], { type: 'application/json' });
@@ -1059,7 +1345,8 @@ function copyDataJson() {
   const data = {
     grades: state.grades,
     songs: state.songs,
-    exportedAt: new Date().toISOString()
+    exportedAt: new Date().toISOString(),
+    version: '2.2'
   };
   const jsonStr = JSON.stringify(data, null, 2);
   navigator.clipboard.writeText(jsonStr).then(() => {
@@ -1130,8 +1417,12 @@ function applyImportedData(data) {
     id: s.id || uid(),
     title: s.title || '제목 없음',
     grade: s.grade || '중1',
+    mediaType: s.mediaType || (s.videoId || s.youtubeUrl ? 'youtube' : 'file'),
     youtubeUrl: s.youtubeUrl || '',
     videoId: s.videoId || extractVideoId(s.youtubeUrl) || '',
+    videoFileName: s.videoFileName || '',
+    videoFileSize: s.videoFileSize || '',
+    hasVideoFile: !!s.hasVideoFile,
     thumbnail: s.thumbnail || (s.videoId ? getYoutubeThumbnail(s.videoId) : ''),
     tags: Array.isArray(s.tags) ? s.tags : [],
     order: s.order ?? idx,
@@ -1169,7 +1460,6 @@ function saveFirebaseConfig() {
     if (input.startsWith('{')) {
       configObj = JSON.parse(input);
     } else {
-      // JS Object literal 허용 (apiKey: '...')
       configObj = new Function(`return (${input});`)();
     }
     if (!configObj || !configObj.projectId) {
@@ -1178,7 +1468,6 @@ function saveFirebaseConfig() {
     }
     localStorage.setItem(FIREBASE_CONFIG_KEY, JSON.stringify(configObj));
     initFirebaseSync();
-    // 현재 데이터 클라우드 최초 동기화
     saveToCloud({ grades: state.grades, songs: state.songs, updatedAt: Date.now() });
     showToast('Firebase 클라우드 연동 성공! 실시간 동기화가 활성화되었습니다 ✓', 'success');
   } catch(e) {
@@ -1199,16 +1488,48 @@ function clearFirebaseConfig() {
   showToast('클라우드 연결이 해제되었습니다. 로컬 저장소 모드로 동작합니다.');
 }
 
+// ── 파일 드래그 앤 드롭 리스너 ──
+function setupFileDropzone() {
+  const dropzone = document.getElementById('fileDropzone');
+  if (!dropzone) return;
+
+  ['dragenter', 'dragover'].forEach(eventName => {
+    dropzone.addEventListener(eventName, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.classList.add('dragover');
+    });
+  });
+
+  ['dragleave', 'drop'].forEach(eventName => {
+    dropzone.addEventListener(eventName, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.classList.remove('dragover');
+    });
+  });
+
+  dropzone.addEventListener('drop', (e) => {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+    if (files && files.length > 0) {
+      handleVideoFileSelect({ target: { files } });
+    }
+  });
+}
+
 // ══════════════════════════════════════════════════════
-// 15. MODAL HELPERS
+// 16. MODAL HELPERS
 // ══════════════════════════════════════════════════════
 function openModal(id) {
-  document.getElementById(id).style.display = 'flex';
+  const el = document.getElementById(id);
+  if (el) el.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
 
 function closeModal(id) {
-  document.getElementById(id).style.display = 'none';
+  const el = document.getElementById(id);
+  if (el) el.style.display = 'none';
   document.body.style.overflow = '';
 }
 
@@ -1230,10 +1551,11 @@ document.addEventListener('keydown', e => {
 });
 
 // ══════════════════════════════════════════════════════
-// 16. TOAST
+// 17. TOAST
 // ══════════════════════════════════════════════════════
 function showToast(msg, type = '') {
   const container = document.getElementById('toastContainer');
+  if (!container) return;
   const toast = document.createElement('div');
   toast.className = 'toast' + (type ? ` toast--${type}` : '');
   toast.textContent = msg;
@@ -1245,20 +1567,34 @@ function showToast(msg, type = '') {
 }
 
 // ══════════════════════════════════════════════════════
-// 17. RENDER ALL & INIT
+// 18. RENDER ALL & INIT (새로고침 안전 가드)
 // ══════════════════════════════════════════════════════
 function renderAll() {
-  renderGradeTabs();
-  renderSidebarStats();
-  renderPageTitle();
-  renderCards();
+  try {
+    renderGradeTabs();
+    renderSidebarStats();
+    renderPageTitle();
+    renderCards();
+  } catch(err) {
+    console.error('렌더링 중 오류 발생:', err);
+  }
 }
 
 function init() {
-  loadState();
-  initFirebaseSync();
-  setupYoutubeUrlAutoThumb();
-  renderAll();
+  try {
+    loadState();
+    setupYoutubeUrlAutoThumb();
+    setupFileDropzone();
+    initFirebaseSync();
+  } catch(e) {
+    console.warn('초기화 단계 경고:', e);
+  } finally {
+    renderAll();
+  }
 }
 
-init();
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
