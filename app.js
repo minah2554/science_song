@@ -1327,11 +1327,69 @@ function removeGrade(grade) {
 // 15. DATA & CLOUD MANAGEMENT
 // ══════════════════════════════════════════════════════
 function openDataModal() {
-  const savedConfig = localStorage.getItem(FIREBASE_CONFIG_KEY) || '';
+  const savedConfig = localStorage.getItem(FIREBASE_CONFIG_KEY);
+  let activeConfig = DEFAULT_FIREBASE_CONFIG;
+  if (savedConfig) {
+    try { activeConfig = JSON.parse(savedConfig); } catch(e) {}
+  }
   const configInput = document.getElementById('firebaseConfigInput');
-  if (configInput) configInput.value = savedConfig;
-  updateCloudBadge(firestoreDb ? 'connected' : (savedConfig ? 'error' : 'local'));
+  if (configInput) {
+    configInput.value = JSON.stringify(activeConfig, null, 2);
+  }
+  updateCloudBadge(firestoreDb ? 'connected' : 'local');
   openModal('dataModal');
+}
+
+async function syncLocalToCloudNow() {
+  if (!firestoreDb) {
+    showToast('클라우드에 연결하는 중...', '');
+    initFirebaseSync();
+  }
+  if (!firestoreDb) {
+    showToast('클라우드 연결을 확인해 주세요.', 'error');
+    return;
+  }
+  showToast('클라우드로 전체 데이터를 전송하는 중...', '');
+  await saveToCloud({
+    grades: state.grades,
+    songs: state.songs,
+    updatedAt: Date.now()
+  });
+  showToast('☁️ 현재 목록이 클라우드에 저장되었습니다! 이제 핸드폰이나 다른 기기에서도 똑같이 보입니다 ✓', 'success');
+}
+
+async function syncCloudToLocalNow() {
+  if (!firestoreDb) {
+    initFirebaseSync();
+  }
+  if (!firestoreDb) {
+    showToast('클라우드 연결을 확인해 주세요.', 'error');
+    return;
+  }
+  try {
+    const doc = await firestoreDb.collection('archive').doc('main').get();
+    if (doc.exists) {
+      const remoteData = doc.data();
+      if (remoteData && remoteData.songs && Array.isArray(remoteData.songs)) {
+        state.songs = remoteData.songs.map((s, idx) => ({
+          locked: false,
+          order: s.order ?? idx,
+          mediaType: s.mediaType || (s.videoId || s.youtubeUrl ? 'youtube' : 'file'),
+          ...s
+        }));
+        if (remoteData.grades && Array.isArray(remoteData.grades)) {
+          state.grades = remoteData.grades;
+        }
+        saveState(true);
+        renderAll();
+        showToast('🔄 클라우드에서 최신 데이터를 가져왔습니다 ✓', 'success');
+      }
+    } else {
+      showToast('클라우드에 저장된 데이터가 없습니다.', 'warn');
+    }
+  } catch(e) {
+    showToast('데이터 가져오기 오류: ' + e.message, 'error');
+  }
 }
 
 function exportDataJson() {
