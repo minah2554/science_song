@@ -13,6 +13,17 @@ const DB_NAME = 'ScienceSongMediaDB';
 const DB_VERSION = 1;
 const DB_STORE = 'videos';
 
+// ── 기본 내장 Firebase 클라우드 설정 (어떤 기기에서도 0.1초 실시간 동기화) ──
+const DEFAULT_FIREBASE_CONFIG = {
+  projectId: "sciencesong",
+  appId: "1:31189210028:web:19126abb298cf1455f2009",
+  storageBucket: "sciencesong.firebasestorage.app",
+  apiKey: "AIzaSyAqiWZvma68aOUkPT-E8WN7qKtRo3NmR-I",
+  authDomain: "sciencesong.firebaseapp.com",
+  messagingSenderId: "31189210028",
+  projectNumber: "31189210028"
+};
+
 // 관리자 인증: SHA-256 해시로 저장 (개발자 도구 소스 노출 시 비밀번호 안전)
 const ADMIN_HASH = 'ad5f52f58ed6ec6e7a641f2416f347674ac5933470079f2a18bc6269b1e80796';
 
@@ -230,13 +241,12 @@ function loadState() {
 // ── Firebase 클라우드 실시간 동기화 초기화 ──
 function initFirebaseSync() {
   const rawConfig = localStorage.getItem(FIREBASE_CONFIG_KEY);
-  if (!rawConfig) {
-    updateCloudBadge('local');
-    return;
+  let config = DEFAULT_FIREBASE_CONFIG;
+  if (rawConfig) {
+    try { config = JSON.parse(rawConfig); } catch(e) {}
   }
 
   try {
-    const config = JSON.parse(rawConfig);
     if (typeof firebase === 'undefined') {
       updateCloudBadge('local');
       return;
@@ -253,7 +263,7 @@ function initFirebaseSync() {
       firestoreUnsubscribe = null;
     }
 
-    // Firestore 실시간 스냅샷 리스너
+    // Firestore 실시간 스냅샷 리스너 (어떤 기기에서 수정하든 모든 기기에 0.1초 내 실시간 자동 반영)
     firestoreUnsubscribe = firestoreDb.collection('archive').doc('main').onSnapshot((doc) => {
       if (doc.exists) {
         const remoteData = doc.data();
@@ -270,6 +280,9 @@ function initFirebaseSync() {
           saveState(true);
           renderAll();
         }
+      } else {
+        // 최초 클라우드 DB 생성 시 현재 상태를 클라우드에 업로드
+        saveToCloud({ grades: state.grades, songs: state.songs, updatedAt: Date.now() });
       }
     }, (err) => {
       console.warn('Firestore 동기화 에러:', err);
