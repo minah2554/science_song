@@ -51,10 +51,7 @@
     }
   </style>
 
-  <!-- SortableJS for drag & drop (with async resilience) -->
-  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
-
-  <link rel="stylesheet" href="style.css?v=2.2" />
+  <link rel="stylesheet" href="style.css?v=2.3" />
 </head>
 
 <body>
@@ -73,6 +70,10 @@
       </div>
     </div>
     <div class="header-right">
+      <button class="header-sync-btn" id="headerSyncBtn" onclick="manualRefreshFromCloud()" title="클라우드에서 최신 과학송 목록 불러오기">
+        <span class="sync-dot" id="headerSyncDot"></span>
+        <span id="headerSyncLabel">동기화 확인 중</span>
+      </button>
       <button class="btn-ghost" id="adminToggleBtn" onclick="openAdminLogin()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round">
@@ -203,7 +204,7 @@
     </span>
     <div class="footer-text">
       <span class="footer-tag">Classroom Tools for Teachers · 과학송 아카이브</span>
-      <span class="footer-copy">© 2026 MINARI STUDIO · Science Song Archive Web App v2.0</span>
+      <span class="footer-copy">© 2026 MINARI STUDIO · Science Song Archive Web App <span class="f-ver">v2.3</span></span>
     </div>
   </footer>
 
@@ -279,20 +280,23 @@
           </button>
         </div>
 
-        <!-- 1. YouTube URL Group -->
+        <!-- 1. YouTube / Cloud Link Group -->
         <div class="form-group" id="youtubeUrlGroup">
-          <label class="form-label" for="songYoutubeUrl">유튜브 URL <span class="form-required">*</span></label>
+          <label class="form-label" for="songYoutubeUrl">영상 링크 (YouTube · 구글 드라이브 · MP4 주소) <span class="form-required">*</span></label>
           <div class="url-input-row">
             <input type="url" id="songYoutubeUrl" class="form-input"
-              placeholder="https://www.youtube.com/watch?v=..." />
+              placeholder="https://www.youtube.com/watch?v=... 또는 구글 드라이브 공유 링크" />
             <button type="button" class="btn-outline" id="fetchThumbBtn" onclick="fetchYoutubeThumbnail()">썸네일
               가져오기</button>
           </div>
-          <p class="form-hint">YouTube 링크를 입력하면 썸네일과 영상이 자동으로 연결됩니다.</p>
+          <p class="form-hint">YouTube 링크(일부 공개 포함)나 구글 드라이브 공유 링크를 입력하면 전자칠판·스마트폰 등 모든 기기에서 바로 재생됩니다.</p>
         </div>
 
         <!-- 2. Video File Upload Group -->
         <div class="form-group" id="fileUploadGroup" style="display:none;">
+          <div class="file-local-notice">
+            ⚠️ <strong>안내:</strong> 직접 등록한 영상 파일은 <strong>현재 사용 중인 PC 브라우저에만 저장</strong>되어 전자칠판 등 다른 기기에서는 재생되지 않습니다. 전자칠판에서도 재생하려면 영상을 <strong>YouTube(일부 공개)</strong> 또는 <strong>구글 드라이브(링크가 있는 모든 사용자 보기)</strong>에 올린 뒤 왼쪽 <strong>YouTube/영상 링크</strong> 탭에 주소를 입력해 주세요.
+          </div>
           <label class="form-label">영상 파일 (MP4, WebM, MOV) <span class="form-required">*</span></label>
           <div class="file-dropzone" id="fileDropzone" onclick="document.getElementById('videoFileInput').click()">
             <input type="file" id="videoFileInput" accept="video/mp4,video/webm,video/ogg,video/quicktime"
@@ -538,10 +542,12 @@
       <div class="modal-body player-body">
         <div class="youtube-embed-wrap" id="youtubeEmbedWrap">
           <iframe id="youtubeIframe" src="" frameborder="0" allowfullscreen
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            title="과학송 유튜브 영상"></iframe>
+            referrerpolicy="strict-origin-when-cross-origin"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+            title="과학송 영상 플레이어"></iframe>
           <video id="html5VideoPlayer" class="html5-video-player" controls controlslist="nodownload" playsinline
             style="display:none;"></video>
+          <div id="playerErrorBox" class="player-error-box" style="display:none;"></div>
         </div>
         <div class="player-info" id="playerInfo"></div>
       </div>
@@ -551,11 +557,11 @@
   <!-- Toast Notification -->
   <div class="toast-container" id="toastContainer" aria-live="polite"></div>
 
-  <!-- Firebase SDK (v9 compat) for Real-time Cloud Sync -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <!-- SortableJS (non-blocking async so school firewalls never freeze initial render) -->
+  <script async src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 
-  <script src="app.js?v=2.2"></script>
+  <!-- Main App (loads immediately without waiting for external CDNs; Firebase SDK loads asynchronously inside) -->
+  <script src="app.js?v=2.3"></script>
 </body>
 
 </html>

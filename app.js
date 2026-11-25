@@ -1,5 +1,5 @@
 /* ============================================================
-   app.js — 과학송 아카이브 메인 로직  v2.2
+   app.js — 과학송 아카이브 메인 로직  v2.3
    ============================================================ */
 
 'use strict';
@@ -7,6 +7,7 @@
 // ══════════════════════════════════════════════════════
 // 1. CONSTANTS & STATE
 // ══════════════════════════════════════════════════════
+const APP_VERSION = 'v2.3';
 const STORAGE_KEY = 'scienceSongArchive_v2';
 const FIREBASE_CONFIG_KEY = 'scienceSong_firebase_config';
 const DB_NAME = 'ScienceSongMediaDB';
@@ -30,42 +31,42 @@ const ADMIN_HASH = 'ad5f52f58ed6ec6e7a641f2416f347674ac5933470079f2a18bc6269b1e8
 // ── 기본 과학송 데이터 ──
 const DEFAULT_SONGS = [
   /* ── 중2 ── */
-  { id:'s01', grade:'중2', title:'원소기호송',              mediaType:'youtube', youtubeUrl:'https://www.youtube.com/watch?v=w2TJ1RBsiK0', videoId:'w2TJ1RBsiK0', thumbnail:'https://img.youtube.com/vi/w2TJ1RBsiK0/hqdefault.jpg', tags:['1단원','물질의구성'],         order:0  },
-  { id:'s02', grade:'중2', title:'이온송',                  mediaType:'youtube', youtubeUrl:'https://www.youtube.com/watch?v=ScxLD5UEoMA', videoId:'ScxLD5UEoMA', thumbnail:'https://img.youtube.com/vi/ScxLD5UEoMA/hqdefault.jpg', tags:['1단원','물질의구성'],         order:1  },
-  { id:'s03', grade:'중2', title:'자기력송',                mediaType:'youtube', youtubeUrl:'https://www.youtube.com/watch?v=2110PW3rkJw', videoId:'2110PW3rkJw', thumbnail:'https://img.youtube.com/vi/2110PW3rkJw/hqdefault.jpg', tags:['2단원','전기와자기'],         order:2  },
-  { id:'s04', grade:'중2', title:'태양계송',                mediaType:'youtube', youtubeUrl:'https://youtu.be/gmJ8RvIQiQc',                videoId:'gmJ8RvIQiQc', thumbnail:'https://img.youtube.com/vi/gmJ8RvIQiQc/hqdefault.jpg', tags:['3단원','태양계'],             order:3  },
-  { id:'s05', grade:'중2', title:'광합성송',                mediaType:'youtube', youtubeUrl:'https://www.youtube.com/watch?v=P8cGGja3sHo', videoId:'P8cGGja3sHo', thumbnail:'https://img.youtube.com/vi/P8cGGja3sHo/hqdefault.jpg', tags:['4단원','식물과에너지'],        order:4  },
-  { id:'s06', grade:'중2', title:'소화 순환 호흡 배설송',   mediaType:'youtube', youtubeUrl:'https://youtu.be/DO7W9upASOY',                videoId:'DO7W9upASOY', thumbnail:'https://img.youtube.com/vi/DO7W9upASOY/hqdefault.jpg', tags:['5단원','동물과에너지'],        order:5  },
-  { id:'s07', grade:'중2', title:'소화기관송',              mediaType:'youtube', youtubeUrl:'https://youtu.be/3adIvbguytc',                videoId:'3adIvbguytc', thumbnail:'https://img.youtube.com/vi/3adIvbguytc/hqdefault.jpg', tags:['5단원','동물과에너지'],        order:6  },
-  { id:'s08', grade:'중2', title:'물질의 특성송',           mediaType:'youtube', youtubeUrl:'https://youtu.be/M3sufHqzpL4',                videoId:'M3sufHqzpL4', thumbnail:'https://img.youtube.com/vi/M3sufHqzpL4/hqdefault.jpg', tags:['6단원','물질의특성'],          order:7  },
-  { id:'s09', grade:'중2', title:'해수의 순환송',           mediaType:'youtube', youtubeUrl:'https://youtu.be/S__Iees0hHo',                videoId:'S__Iees0hHo', thumbnail:'https://img.youtube.com/vi/S__Iees0hHo/hqdefault.jpg', tags:['7단원','수권과해수의순환'],     order:8  },
-  { id:'s10', grade:'중2', title:'수권의 구성과 해수송',    mediaType:'youtube', youtubeUrl:'https://youtu.be/wUkOtZdeQOQ',               videoId:'wUkOtZdeQOQ', thumbnail:'https://img.youtube.com/vi/wUkOtZdeQOQ/hqdefault.jpg', tags:['7단원','수권과해수의순환'],     order:9  },
-  { id:'s11', grade:'중2', title:'열과 우리 생활송',        mediaType:'youtube', youtubeUrl:'https://youtu.be/Vx_J5q2aAmg',               videoId:'Vx_J5q2aAmg', thumbnail:'https://img.youtube.com/vi/Vx_J5q2aAmg/hqdefault.jpg', tags:['8단원','열과우리생활'],         order:10 },
-  { id:'s12', grade:'중2', title:'열의 이동과 비열송',      mediaType:'youtube', youtubeUrl:'https://youtu.be/u5doBPQlgPg',               videoId:'u5doBPQlgPg', thumbnail:'https://img.youtube.com/vi/u5doBPQlgPg/hqdefault.jpg', tags:['8단원','열과우리생활'],         order:11 },
+  { id: 's01', grade: '중2', title: '원소기호송', mediaType: 'youtube', youtubeUrl: 'https://www.youtube.com/watch?v=w2TJ1RBsiK0', videoId: 'w2TJ1RBsiK0', thumbnail: 'https://img.youtube.com/vi/w2TJ1RBsiK0/hqdefault.jpg', tags: ['1단원', '물질의구성'], order: 0 },
+  { id: 's02', grade: '중2', title: '이온송', mediaType: 'youtube', youtubeUrl: 'https://www.youtube.com/watch?v=ScxLD5UEoMA', videoId: 'ScxLD5UEoMA', thumbnail: 'https://img.youtube.com/vi/ScxLD5UEoMA/hqdefault.jpg', tags: ['1단원', '물질의구성'], order: 1 },
+  { id: 's03', grade: '중2', title: '자기력송', mediaType: 'youtube', youtubeUrl: 'https://www.youtube.com/watch?v=2110PW3rkJw', videoId: '2110PW3rkJw', thumbnail: 'https://img.youtube.com/vi/2110PW3rkJw/hqdefault.jpg', tags: ['2단원', '전기와자기'], order: 2 },
+  { id: 's04', grade: '중2', title: '태양계송', mediaType: 'youtube', youtubeUrl: 'https://youtu.be/gmJ8RvIQiQc', videoId: 'gmJ8RvIQiQc', thumbnail: 'https://img.youtube.com/vi/gmJ8RvIQiQc/hqdefault.jpg', tags: ['3단원', '태양계'], order: 3 },
+  { id: 's05', grade: '중2', title: '광합성송', mediaType: 'youtube', youtubeUrl: 'https://www.youtube.com/watch?v=P8cGGja3sHo', videoId: 'P8cGGja3sHo', thumbnail: 'https://img.youtube.com/vi/P8cGGja3sHo/hqdefault.jpg', tags: ['4단원', '식물과에너지'], order: 4 },
+  { id: 's06', grade: '중2', title: '소화 순환 호흡 배설송', mediaType: 'youtube', youtubeUrl: 'https://youtu.be/DO7W9upASOY', videoId: 'DO7W9upASOY', thumbnail: 'https://img.youtube.com/vi/DO7W9upASOY/hqdefault.jpg', tags: ['5단원', '동물과에너지'], order: 5 },
+  { id: 's07', grade: '중2', title: '소화기관송', mediaType: 'youtube', youtubeUrl: 'https://youtu.be/3adIvbguytc', videoId: '3adIvbguytc', thumbnail: 'https://img.youtube.com/vi/3adIvbguytc/hqdefault.jpg', tags: ['5단원', '동물과에너지'], order: 6 },
+  { id: 's08', grade: '중2', title: '물질의 특성송', mediaType: 'youtube', youtubeUrl: 'https://youtu.be/M3sufHqzpL4', videoId: 'M3sufHqzpL4', thumbnail: 'https://img.youtube.com/vi/M3sufHqzpL4/hqdefault.jpg', tags: ['6단원', '물질의특성'], order: 7 },
+  { id: 's09', grade: '중2', title: '해수의 순환송', mediaType: 'youtube', youtubeUrl: 'https://youtu.be/S__Iees0hHo', videoId: 'S__Iees0hHo', thumbnail: 'https://img.youtube.com/vi/S__Iees0hHo/hqdefault.jpg', tags: ['7단원', '수권과해수의순환'], order: 8 },
+  { id: 's10', grade: '중2', title: '수권의 구성과 해수송', mediaType: 'youtube', youtubeUrl: 'https://youtu.be/wUkOtZdeQOQ', videoId: 'wUkOtZdeQOQ', thumbnail: 'https://img.youtube.com/vi/wUkOtZdeQOQ/hqdefault.jpg', tags: ['7단원', '수권과해수의순환'], order: 9 },
+  { id: 's11', grade: '중2', title: '열과 우리 생활송', mediaType: 'youtube', youtubeUrl: 'https://youtu.be/Vx_J5q2aAmg', videoId: 'Vx_J5q2aAmg', thumbnail: 'https://img.youtube.com/vi/Vx_J5q2aAmg/hqdefault.jpg', tags: ['8단원', '열과우리생활'], order: 10 },
+  { id: 's12', grade: '중2', title: '열의 이동과 비열송', mediaType: 'youtube', youtubeUrl: 'https://youtu.be/u5doBPQlgPg', videoId: 'u5doBPQlgPg', thumbnail: 'https://img.youtube.com/vi/u5doBPQlgPg/hqdefault.jpg', tags: ['8단원', '열과우리생활'], order: 11 },
   /* ── 중1 ── */
-  { id:'s13', grade:'중1', title:'지구계송',                mediaType:'youtube', youtubeUrl:'https://youtu.be/y4Zq3pB529A',               videoId:'y4Zq3pB529A', thumbnail:'https://img.youtube.com/vi/y4Zq3pB529A/hqdefault.jpg', tags:['1단원','지권의변화'],          order:12 },
-  { id:'s14', grade:'중1', title:'암석송',                  mediaType:'youtube', youtubeUrl:'https://www.youtube.com/watch?v=YNalQ0fOyVw', videoId:'YNalQ0fOyVw', thumbnail:'https://img.youtube.com/vi/YNalQ0fOyVw/hqdefault.jpg', tags:['1단원','지권의변화'],          order:13 },
-  { id:'s15', grade:'중1', title:'광물송',                  mediaType:'youtube', youtubeUrl:'https://youtu.be/-H5uBoLp4CE',               videoId:'-H5uBoLp4CE', thumbnail:'https://img.youtube.com/vi/-H5uBoLp4CE/hqdefault.jpg', tags:['1단원','지권의변화'],          order:14 },
-  { id:'s16', grade:'중1', title:'여러 가지 힘송',          mediaType:'youtube', youtubeUrl:'https://youtu.be/_vAn-w2YbLg',               videoId:'_vAn-w2YbLg', thumbnail:'https://img.youtube.com/vi/_vAn-w2YbLg/hqdefault.jpg', tags:['2단원','여러가지힘'],          order:15 },
-  { id:'s17', grade:'중1', title:'생물 다양성송',           mediaType:'youtube', youtubeUrl:'https://youtu.be/RvIAFg_dQu4',               videoId:'RvIAFg_dQu4', thumbnail:'https://img.youtube.com/vi/RvIAFg_dQu4/hqdefault.jpg', tags:['3단원','생물의다양성'],         order:16 },
-  { id:'s18', grade:'중1', title:'기체의 성질송',           mediaType:'youtube', youtubeUrl:'https://www.youtube.com/watch?v=nDiXiCdIKIQ', videoId:'nDiXiCdIKIQ', thumbnail:'https://img.youtube.com/vi/nDiXiCdIKIQ/hqdefault.jpg', tags:['4단원','기체의성질'],          order:17 },
-  { id:'s19', grade:'중1', title:'분자 배열송 (상태변화송)', mediaType:'youtube', youtubeUrl:'https://www.youtube.com/watch?v=ekN9KcXRGMw', videoId:'ekN9KcXRGMw', thumbnail:'https://img.youtube.com/vi/ekN9KcXRGMw/hqdefault.jpg', tags:['5단원','물질의상태변화'],  order:18 },
-  { id:'s20', grade:'중1', title:'파동송',                  mediaType:'youtube', youtubeUrl:'https://www.youtube.com/watch?v=DpBDJlEB5V4', videoId:'DpBDJlEB5V4', thumbnail:'https://img.youtube.com/vi/DpBDJlEB5V4/hqdefault.jpg', tags:['6단원','빛과파동'],            order:19 },
+  { id: 's13', grade: '중1', title: '지구계송', mediaType: 'youtube', youtubeUrl: 'https://youtu.be/y4Zq3pB529A', videoId: 'y4Zq3pB529A', thumbnail: 'https://img.youtube.com/vi/y4Zq3pB529A/hqdefault.jpg', tags: ['1단원', '지권의변화'], order: 12 },
+  { id: 's14', grade: '중1', title: '암석송', mediaType: 'youtube', youtubeUrl: 'https://www.youtube.com/watch?v=YNalQ0fOyVw', videoId: 'YNalQ0fOyVw', thumbnail: 'https://img.youtube.com/vi/YNalQ0fOyVw/hqdefault.jpg', tags: ['1단원', '지권의변화'], order: 13 },
+  { id: 's15', grade: '중1', title: '광물송', mediaType: 'youtube', youtubeUrl: 'https://youtu.be/-H5uBoLp4CE', videoId: '-H5uBoLp4CE', thumbnail: 'https://img.youtube.com/vi/-H5uBoLp4CE/hqdefault.jpg', tags: ['1단원', '지권의변화'], order: 14 },
+  { id: 's16', grade: '중1', title: '여러 가지 힘송', mediaType: 'youtube', youtubeUrl: 'https://youtu.be/_vAn-w2YbLg', videoId: '_vAn-w2YbLg', thumbnail: 'https://img.youtube.com/vi/_vAn-w2YbLg/hqdefault.jpg', tags: ['2단원', '여러가지힘'], order: 15 },
+  { id: 's17', grade: '중1', title: '생물 다양성송', mediaType: 'youtube', youtubeUrl: 'https://youtu.be/RvIAFg_dQu4', videoId: 'RvIAFg_dQu4', thumbnail: 'https://img.youtube.com/vi/RvIAFg_dQu4/hqdefault.jpg', tags: ['3단원', '생물의다양성'], order: 16 },
+  { id: 's18', grade: '중1', title: '기체의 성질송', mediaType: 'youtube', youtubeUrl: 'https://www.youtube.com/watch?v=nDiXiCdIKIQ', videoId: 'nDiXiCdIKIQ', thumbnail: 'https://img.youtube.com/vi/nDiXiCdIKIQ/hqdefault.jpg', tags: ['4단원', '기체의성질'], order: 17 },
+  { id: 's19', grade: '중1', title: '분자 배열송 (상태변화송)', mediaType: 'youtube', youtubeUrl: 'https://www.youtube.com/watch?v=ekN9KcXRGMw', videoId: 'ekN9KcXRGMw', thumbnail: 'https://img.youtube.com/vi/ekN9KcXRGMw/hqdefault.jpg', tags: ['5단원', '물질의상태변화'], order: 18 },
+  { id: 's20', grade: '중1', title: '파동송', mediaType: 'youtube', youtubeUrl: 'https://www.youtube.com/watch?v=DpBDJlEB5V4', videoId: 'DpBDJlEB5V4', thumbnail: 'https://img.youtube.com/vi/DpBDJlEB5V4/hqdefault.jpg', tags: ['6단원', '빛과파동'], order: 19 },
 ];
 
 const DEFAULT_GRADES = ['전체', '중1', '중2', '중3'];
 
 let state = {
-  grades:             [...DEFAULT_GRADES],
-  songs:              DEFAULT_SONGS.map(s => ({ ...s, locked: false })),
-  currentGrade:       '전체',
-  isAdmin:            false,
-  editingId:          null,
-  currentTags:        [],
-  sortBy:             'default',
-  currentMediaType:   'youtube', // 'youtube' | 'file'
-  selectedVideoFile:  null,
-  selectedThumbData:  ''
+  grades: [...DEFAULT_GRADES],
+  songs: DEFAULT_SONGS.map(s => ({ ...s, locked: false })),
+  currentGrade: '전체',
+  isAdmin: false,
+  editingId: null,
+  currentTags: [],
+  sortBy: 'default',
+  currentMediaType: 'youtube', // 'youtube' | 'file'
+  selectedVideoFile: null,
+  selectedThumbData: ''
 };
 
 let sortableInstance = null;
@@ -73,6 +74,10 @@ let firestoreDb = null;
 let firestoreUnsubscribe = null;
 let syncBroadcast = null;
 let currentVideoObjectUrl = null;
+let localUpdatedAt = 0;
+let hasUnsyncedLocal = false;
+let firebaseSdkLoaded = false;
+let firebaseSdkLoading = false;
 
 // ── 태그 색상 팔레트 ──
 const UNIT_COLORS = [
@@ -137,7 +142,7 @@ async function saveVideoBlob(id, fileOrBlob) {
       store.put(fileOrBlob, id);
       tx.oncomplete = () => resolve(true);
       tx.onerror = () => resolve(false);
-    } catch(e) {
+    } catch (e) {
       resolve(false);
     }
   });
@@ -153,7 +158,7 @@ async function getVideoBlob(id) {
       const req = store.get(id);
       req.onsuccess = () => resolve(req.result || null);
       req.onerror = () => resolve(null);
-    } catch(e) {
+    } catch (e) {
       resolve(null);
     }
   });
@@ -165,7 +170,7 @@ async function deleteVideoBlob(id) {
   try {
     const tx = db.transaction(DB_STORE, 'readwrite');
     tx.objectStore(DB_STORE).delete(id);
-  } catch(e) {}
+  } catch (e) { }
 }
 
 // ══════════════════════════════════════════════════════
@@ -181,7 +186,7 @@ try {
       }
     };
   }
-} catch(e) {}
+} catch (e) { }
 
 // 브라우저 탭 간 실시간 storage 이벤트 동기화
 window.addEventListener('storage', (e) => {
@@ -191,15 +196,57 @@ window.addEventListener('storage', (e) => {
   }
 });
 
-function saveState(skipCloud = false) {
+function getActiveFirebaseConfig() {
+  const rawConfig = localStorage.getItem(FIREBASE_CONFIG_KEY);
+  if (rawConfig) {
+    try {
+      const parsed = JSON.parse(rawConfig);
+      if (parsed && parsed.projectId) return parsed;
+    } catch (e) { }
+  }
+  return DEFAULT_FIREBASE_CONFIG;
+}
+
+function normalizeSongItem(s, idx) {
+  const item = s || {};
+  const hasYt = !!(item.videoId || item.youtubeUrl);
+  const clean = {
+    id: item.id || uid(),
+    title: item.title || '제목 없음',
+    grade: item.grade || '중1',
+    mediaType: item.mediaType || (hasYt ? 'youtube' : 'file'),
+    youtubeUrl: item.youtubeUrl || '',
+    videoId: item.videoId || (item.youtubeUrl ? (extractVideoId(item.youtubeUrl) || '') : ''),
+    videoFileName: item.videoFileName || '',
+    videoFileSize: item.videoFileSize || '',
+    hasVideoFile: !!item.hasVideoFile,
+    thumbnail: item.thumbnail || '',
+    tags: Array.isArray(item.tags) ? item.tags.map(t => String(t)) : [],
+    order: typeof item.order === 'number' ? item.order : (parseInt(item.order, 10) || (item.order === 0 || item.order === '0' ? 0 : idx)),
+    locked: !!item.locked
+  };
+  if (!clean.thumbnail && clean.videoId) {
+    clean.thumbnail = getYoutubeThumbnail(clean.videoId);
+  }
+  return clean;
+}
+
+function saveState(skipCloud) {
+  const isSkip = !!skipCloud;
+  const now = Date.now();
+  if (!isSkip) {
+    localUpdatedAt = now;
+    hasUnsyncedLocal = true;
+  }
   const toSave = {
     grades: state.grades,
-    songs: state.songs,
-    updatedAt: Date.now()
+    songs: state.songs.map((s, idx) => normalizeSongItem(s, idx)),
+    updatedAt: isSkip ? (localUpdatedAt || now) : now,
+    hasUnsyncedLocal: hasUnsyncedLocal
   };
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
-  } catch(e) {
+  } catch (e) {
     console.warn('LocalStorage 저장 경고:', e);
   }
 
@@ -208,10 +255,10 @@ function saveState(skipCloud = false) {
     if (syncBroadcast) {
       syncBroadcast.postMessage({ type: 'STATE_UPDATED', updatedAt: toSave.updatedAt });
     }
-  } catch(e) {}
+  } catch (e) { }
 
   // Firebase 실시간 클라우드 DB로 동기화
-  if (!skipCloud) {
+  if (!isSkip) {
     saveToCloud(toSave);
   }
 }
@@ -222,104 +269,340 @@ function loadState() {
     if (!raw) return;
     const saved = JSON.parse(raw);
     if (saved.grades && Array.isArray(saved.grades) && saved.grades.length > 0) {
-      const validGrades = saved.grades.includes('전체') ? saved.grades : ['전체', ...saved.grades];
+      const validGrades = saved.grades.indexOf('전체') !== -1 ? saved.grades : ['전체'].concat(saved.grades);
       state.grades = validGrades;
     }
     if (saved.songs && Array.isArray(saved.songs)) {
-      state.songs = saved.songs.map((s, idx) => ({
-        locked: false,
-        order: s.order ?? idx,
-        mediaType: s.mediaType || (s.videoId || s.youtubeUrl ? 'youtube' : 'file'),
-        ...s
-      }));
+      state.songs = saved.songs.map((s, idx) => normalizeSongItem(s, idx));
     }
-  } catch(e) {
+    if (typeof saved.updatedAt === 'number') {
+      localUpdatedAt = saved.updatedAt;
+    }
+    hasUnsyncedLocal = !!saved.hasUnsyncedLocal;
+  } catch (e) {
     console.warn('LocalStorage 로드 오류:', e);
+  }
+}
+
+// ── Firestore REST API 변환 유틸 (구형 전자칠판·학교 방화벽 완벽 호환) ──
+function fromFirestoreValue(val) {
+  if (!val || typeof val !== 'object') return null;
+  if ('stringValue' in val) return val.stringValue;
+  if ('booleanValue' in val) return !!val.booleanValue;
+  if ('integerValue' in val) return Number(val.integerValue);
+  if ('doubleValue' in val) return Number(val.doubleValue);
+  if ('nullValue' in val) return null;
+  if ('arrayValue' in val) {
+    const arr = (val.arrayValue && Array.isArray(val.arrayValue.values)) ? val.arrayValue.values : [];
+    return arr.map(fromFirestoreValue);
+  }
+  if ('mapValue' in val) {
+    const obj = {};
+    const fields = (val.mapValue && val.mapValue.fields) ? val.mapValue.fields : {};
+    Object.keys(fields).forEach(k => {
+      obj[k] = fromFirestoreValue(fields[k]);
+    });
+    return obj;
+  }
+  return null;
+}
+
+function toFirestoreValue(val) {
+  if (val === null || typeof val === 'undefined') return { nullValue: null };
+  if (typeof val === 'boolean') return { booleanValue: val };
+  if (typeof val === 'number') {
+    if (Number.isInteger(val)) return { integerValue: String(val) };
+    return { doubleValue: val };
+  }
+  if (typeof val === 'string') return { stringValue: val };
+  if (Array.isArray(val)) {
+    return { arrayValue: { values: val.map(toFirestoreValue) } };
+  }
+  if (typeof val === 'object') {
+    const fields = {};
+    Object.keys(val).forEach(k => {
+      if (typeof val[k] !== 'undefined') {
+        fields[k] = toFirestoreValue(val[k]);
+      }
+    });
+    return { mapValue: { fields: fields } };
+  }
+  return { stringValue: String(val) };
+}
+
+function getFirestoreRestUrl() {
+  const config = getActiveFirebaseConfig();
+  const base = 'https://firestore.googleapis.com/v1/projects/' + encodeURIComponent(config.projectId) + '/databases/(default)/documents/archive/main';
+  return config.apiKey ? (base + '?key=' + encodeURIComponent(config.apiKey)) : base;
+}
+
+// ── 원격 데이터 안전 병합 적용 (업로드한 데이터 절대 유실 방지) ──
+function applyRemoteData(remoteData) {
+  if (!remoteData || !Array.isArray(remoteData.songs)) return false;
+
+  const remoteUpdatedAt = Number(remoteData.updatedAt) || 0;
+  const remoteSongs = remoteData.songs.map((s, idx) => normalizeSongItem(s, idx));
+  const remoteGrades = (Array.isArray(remoteData.grades) && remoteData.grades.length > 0)
+    ? (remoteData.grades.indexOf('전체') !== -1 ? remoteData.grades : ['전체'].concat(remoteData.grades))
+    : null;
+
+  // 이 기기에 아직 클라우드로 못 올라간 로컬 추가분이 더 최신이면 덮어쓰지 않고 안전 병합
+  if (hasUnsyncedLocal && localUpdatedAt > remoteUpdatedAt) {
+    const remoteIds = {};
+    remoteSongs.forEach(s => { remoteIds[s.id] = true; });
+    const localOnly = state.songs.filter(s => !remoteIds[s.id]);
+    if (localOnly.length > 0) {
+      const merged = remoteSongs.concat(localOnly);
+      state.songs = merged.map((s, idx) => normalizeSongItem(s, idx));
+      if (remoteGrades) {
+        remoteGrades.forEach(g => {
+          if (state.grades.indexOf(g) === -1) state.grades.push(g);
+        });
+      }
+      renderAll();
+      saveToCloud({ grades: state.grades, songs: state.songs, updatedAt: Date.now() });
+      return true;
+    }
+  }
+
+  state.songs = remoteSongs;
+  if (remoteGrades) {
+    state.grades = remoteGrades;
+  }
+  localUpdatedAt = remoteUpdatedAt || Date.now();
+  hasUnsyncedLocal = false;
+  saveState(true);
+  renderAll();
+  return true;
+}
+
+// ── 직접 HTTPS REST 조회 (학교 방화벽·구형 전자칠판에서도 100% 동작) ──
+async function fetchFromCloudRest() {
+  try {
+    const baseUrl = getFirestoreRestUrl();
+    const url = baseUrl + (baseUrl.indexOf('?') !== -1 ? '&' : '?') + '_t=' + Date.now();
+    const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+    if (!res.ok) {
+      throw new Error('HTTP ' + res.status);
+    }
+    const doc = await res.json();
+    if (!doc || !doc.fields) return false;
+    const remoteData = {
+      songs: fromFirestoreValue(doc.fields.songs) || [],
+      grades: fromFirestoreValue(doc.fields.grades) || [],
+      updatedAt: fromFirestoreValue(doc.fields.updatedAt) || 0
+    };
+    const applied = applyRemoteData(remoteData);
+    updateCloudBadge('connected');
+    return applied;
+  } catch (err) {
+    console.warn('클라우드 REST 조회 경고:', err);
+    if (!firestoreDb) updateCloudBadge('error');
+    return false;
+  }
+}
+
+async function saveToCloudRest(cleanPayload) {
+  const url = getFirestoreRestUrl();
+  const body = {
+    fields: {
+      songs: toFirestoreValue(cleanPayload.songs),
+      grades: toFirestoreValue(cleanPayload.grades),
+      updatedAt: toFirestoreValue(cleanPayload.updatedAt)
+    }
+  };
+  const res = await fetch(url, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    throw new Error('REST 저장 실패 (' + res.status + ') ' + errText.slice(0, 120));
+  }
+  return true;
+}
+
+// ── Firebase SDK 비동기 로드 (외부 CDN 지연·차단 시에도 화면 멈춤 없음) ──
+function loadScriptAsync(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.async = true;
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error('Script load failed: ' + src));
+    document.head.appendChild(s);
+  });
+}
+
+async function ensureFirebaseSdk() {
+  if (typeof firebase !== 'undefined' && firebase.firestore) {
+    firebaseSdkLoaded = true;
+    return true;
+  }
+  if (firebaseSdkLoading) return false;
+  firebaseSdkLoading = true;
+  try {
+    await loadScriptAsync('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
+    await loadScriptAsync('https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js');
+    firebaseSdkLoaded = (typeof firebase !== 'undefined' && !!firebase.firestore);
+    return firebaseSdkLoaded;
+  } catch (e) {
+    console.warn('Firebase SDK 로드 생략 (REST 동기화 모드로 동작):', e);
+    return false;
+  } finally {
+    firebaseSdkLoading = false;
   }
 }
 
 // ── Firebase 클라우드 실시간 동기화 초기화 ──
 function initFirebaseSync() {
-  const rawConfig = localStorage.getItem(FIREBASE_CONFIG_KEY);
-  let config = DEFAULT_FIREBASE_CONFIG;
-  if (rawConfig) {
-    try { config = JSON.parse(rawConfig); } catch(e) {}
-  }
+  updateCloudBadge('syncing');
 
+  // 1단계: 즉시 HTTPS REST로 최신 목록 불러오기 (전자칠판·구형 브라우저·방화벽 환경 즉시 표시)
+  fetchFromCloudRest();
+
+  // 2단계: 비동기로 Firebase 실시간 SDK 연결 시도
+  ensureFirebaseSdk().then((ready) => {
+    if (!ready) return;
+    attachFirestoreRealtime();
+  }).catch(() => { });
+}
+
+function attachFirestoreRealtime() {
+  const config = getActiveFirebaseConfig();
   try {
-    if (typeof firebase === 'undefined') {
-      updateCloudBadge('local');
-      return;
-    }
+    if (typeof firebase === 'undefined' || !firebase.firestore) return;
 
     if (!firebase.apps || !firebase.apps.length) {
       firebase.initializeApp(config);
     }
     firestoreDb = firebase.firestore();
-    updateCloudBadge('connected');
+    try {
+      // 학교 네트워크/방화벽 환경에서 WebChannel 끊김 방지
+      firestoreDb.settings({ experimentalAutoDetectLongPolling: true, merge: true });
+    } catch (e) { }
 
     if (firestoreUnsubscribe) {
       firestoreUnsubscribe();
       firestoreUnsubscribe = null;
     }
 
-    // Firestore 실시간 스냅샷 리스너 (어떤 기기에서 수정하든 모든 기기에 0.1초 내 실시간 자동 반영)
+    // Firestore 실시간 스냅샷 리스너 (기존 데이터를 임의로 덮어쓰지 않음)
     firestoreUnsubscribe = firestoreDb.collection('archive').doc('main').onSnapshot((doc) => {
       if (doc.exists) {
         const remoteData = doc.data();
-        if (remoteData && remoteData.songs && Array.isArray(remoteData.songs)) {
-          state.songs = remoteData.songs.map((s, idx) => ({
-            locked: false,
-            order: s.order ?? idx,
-            mediaType: s.mediaType || (s.videoId || s.youtubeUrl ? 'youtube' : 'file'),
-            ...s
-          }));
-          if (remoteData.grades && Array.isArray(remoteData.grades)) {
-            state.grades = remoteData.grades;
-          }
-          saveState(true);
-          renderAll();
+        if (remoteData && Array.isArray(remoteData.songs)) {
+          applyRemoteData(remoteData);
+          updateCloudBadge('connected');
         }
-      } else {
-        // 최초 클라우드 DB 생성 시 현재 상태를 클라우드에 업로드
-        saveToCloud({ grades: state.grades, songs: state.songs, updatedAt: Date.now() });
       }
     }, (err) => {
-      console.warn('Firestore 동기화 에러:', err);
-      updateCloudBadge('error');
+      console.warn('Firestore 실시간 리스너 경고 (REST 폴백 유지):', err);
+      fetchFromCloudRest();
     });
   } catch (err) {
-    console.warn('Firebase 초기화 실패:', err);
-    updateCloudBadge('error');
+    console.warn('Firebase 실시간 초기화 실패:', err);
   }
 }
 
 async function saveToCloud(data) {
-  if (!firestoreDb) return;
-  try {
-    await firestoreDb.collection('archive').doc('main').set({
-      songs: data.songs,
-      grades: data.grades,
-      updatedAt: data.updatedAt || Date.now()
-    }, { merge: true });
-  } catch (err) {
-    console.warn('클라우드 저장 실패:', err);
+  const cleanPayload = {
+    songs: (data.songs || []).map((s, idx) => normalizeSongItem(s, idx)),
+    grades: Array.isArray(data.grades) ? data.grades : state.grades,
+    updatedAt: data.updatedAt || Date.now()
+  };
+
+  // Firestore 1MB 문서 제한 사전 점검
+  const approxBytes = new Blob([JSON.stringify(cleanPayload)]).size;
+  if (approxBytes > 950000) {
+    updateCloudBadge('error');
+    showToast('⚠️ 저장 용량이 커서 클라우드에 올릴 수 없습니다. 썸네일 크기를 줄이거나 유튜브 링크를 사용해 주세요.', 'error');
+    return false;
+  }
+
+  updateCloudBadge('syncing');
+  let saved = false;
+  let lastErr = null;
+
+  if (firestoreDb) {
+    try {
+      await firestoreDb.collection('archive').doc('main').set(cleanPayload, { merge: true });
+      saved = true;
+    } catch (err) {
+      lastErr = err;
+      console.warn('Firestore SDK 저장 실패, REST 폴백 시도:', err);
+    }
+  }
+
+  if (!saved) {
+    try {
+      await saveToCloudRest(cleanPayload);
+      saved = true;
+    } catch (restErr) {
+      lastErr = restErr;
+      console.warn('클라우드 REST 저장 실패:', restErr);
+    }
+  }
+
+  if (saved) {
+    hasUnsyncedLocal = false;
+    localUpdatedAt = cleanPayload.updatedAt;
+    saveState(true);
+    updateCloudBadge('connected');
+    return true;
+  }
+
+  updateCloudBadge('error');
+  showToast('⚠️ 클라우드 저장에 실패했습니다. 네트워크 상태를 확인 후 다시 시도해 주세요.', 'error');
+  return false;
+}
+
+async function manualRefreshFromCloud() {
+  updateCloudBadge('syncing');
+  const ok = await fetchFromCloudRest();
+  if (ok) {
+    showToast('☁️ 클라우드에서 최신 과학송 ' + state.songs.length + '곡을 불러왔습니다 ✓', 'success');
+  } else {
+    showToast('⚠️ 클라우드 연결을 확인해 주세요. 현재 저장된 목록을 표시합니다.', 'warn');
   }
 }
 
 function updateCloudBadge(status) {
   const badge = document.getElementById('cloudStatusBadge');
-  if (!badge) return;
-  badge.className = 'cloud-status-badge';
-  if (status === 'connected') {
-    badge.classList.add('cloud-status--connected');
-    badge.textContent = '☁️ 실시간 클라우드 연결됨';
-  } else if (status === 'error') {
-    badge.classList.add('cloud-status--error');
-    badge.textContent = '⚠️ 클라우드 연결 오류';
-  } else {
-    badge.classList.add('cloud-status--local');
-    badge.textContent = '💾 로컬 저장소 모드';
+  if (badge) {
+    badge.className = 'cloud-status-badge';
+    if (status === 'connected') {
+      badge.classList.add('cloud-status--connected');
+      badge.textContent = '☁️ 실시간 클라우드 연결됨';
+    } else if (status === 'syncing') {
+      badge.classList.add('cloud-status--local');
+      badge.textContent = '🔄 클라우드 동기화 중...';
+    } else if (status === 'error') {
+      badge.classList.add('cloud-status--error');
+      badge.textContent = '⚠️ 클라우드 연결 오류';
+    } else {
+      badge.classList.add('cloud-status--local');
+      badge.textContent = '💾 로컬 저장소 모드';
+    }
+  }
+
+  const headerBtn = document.getElementById('headerSyncBtn');
+  const headerLabel = document.getElementById('headerSyncLabel');
+  if (headerBtn && headerLabel) {
+    headerBtn.classList.remove('is-synced', 'is-syncing', 'is-error');
+    if (status === 'connected') {
+      headerBtn.classList.add('is-synced');
+      headerLabel.textContent = '동기화됨';
+    } else if (status === 'syncing') {
+      headerBtn.classList.add('is-syncing');
+      headerLabel.textContent = '불러오는 중';
+    } else if (status === 'error') {
+      headerBtn.classList.add('is-error');
+      headerLabel.textContent = '재시도';
+    } else {
+      headerLabel.textContent = '오프라인';
+    }
   }
 }
 
@@ -336,39 +619,130 @@ function extractVideoId(url) {
     /[?&]v=([^&#]+)/,
     /youtu\.be\/([^?&#]+)/,
     /youtube\.com\/embed\/([^?&#]+)/,
-    /youtube\.com\/shorts\/([^?&#]+)/
+    /youtube\.com\/shorts\/([^?&#]+)/,
+    /youtube\.com\/live\/([^?&#]+)/
   ];
-  for (const p of patterns) {
-    const m = url.match(p);
+  for (let i = 0; i < patterns.length; i++) {
+    const m = url.match(patterns[i]);
     if (m) return m[1];
   }
   return null;
 }
 
+function extractGoogleDriveId(url) {
+  if (!url) return null;
+  const patterns = [
+    /drive\.google\.com\/file\/d\/([^/?&#]+)/,
+    /drive\.google\.com\/open\?id=([^&#]+)/,
+    /drive\.google\.com\/uc\?[^#]*id=([^&#]+)/
+  ];
+  for (let i = 0; i < patterns.length; i++) {
+    const m = url.match(patterns[i]);
+    if (m) return m[1];
+  }
+  return null;
+}
+
+function isDirectVideoUrl(url) {
+  if (!url) return false;
+  return /^https?:\/\/.+\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(url.trim());
+}
+
 function getYoutubeThumbnail(videoId) {
-  return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+  return 'https://img.youtube.com/vi/' + videoId + '/hqdefault.jpg';
 }
 
-// 광고 최소화: 개인정보 보호 모드(youtube-nocookie.com) 및 플레이어 최적화 파라미터 적용
+// 전자칠판·학교 네트워크 호환성이 가장 높은 표준 YouTube 임베드 URL 사용
 function getYoutubeEmbedUrl(videoId) {
-  return `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&iv_load_policy=3`;
+  return 'https://www.youtube.com/embed/' + encodeURIComponent(videoId) + '?autoplay=1&rel=0&modestbranding=1&playsinline=1';
 }
 
-function escapeHtml(str = '') {
+function escapeHtml(str) {
+  if (typeof str === 'undefined' || str === null) str = '';
   return String(str)
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// 구형 브라우저·HTTP 환경에서도 동작하는 순수 JS SHA-256 폴백
+function sha256Fallback(ascii) {
+  function rightRotate(value, amount) {
+    return (value >>> amount) | (value << (32 - amount));
+  }
+  const mathPow = Math.pow;
+  const maxWord = mathPow(2, 32);
+  let i, j;
+  let result = '';
+  const words = [];
+  const utf8 = unescape(encodeURIComponent(ascii));
+  const asciiBitLength = utf8.length * 8;
+  const hash = [];
+  const k = [];
+  let primeCounter = 0;
+  const isComposite = {};
+  for (let candidate = 2; primeCounter < 64; candidate++) {
+    if (!isComposite[candidate]) {
+      for (i = 0; i < 313; i += candidate) isComposite[i] = candidate;
+      hash[primeCounter] = (mathPow(candidate, 0.5) * maxWord) | 0;
+      k[primeCounter++] = (mathPow(candidate, 1 / 3) * maxWord) | 0;
+    }
+  }
+  let padded = utf8 + '\x80';
+  while (padded.length % 64 - 56) padded += '\x00';
+  for (i = 0; i < padded.length; i++) {
+    j = padded.charCodeAt(i);
+    words[i >> 2] |= j << ((3 - i) % 4) * 8;
+  }
+  words[words.length] = ((asciiBitLength / maxWord) | 0);
+  words[words.length] = (asciiBitLength);
+  for (j = 0; j < words.length;) {
+    const w = words.slice(j, j += 16);
+    const oldHash = hash.slice(0);
+    for (i = 0; i < 64; i++) {
+      const w15 = w[i - 15], w2 = w[i - 2];
+      const a = hash[0], e = hash[4];
+      const temp1 = hash[7]
+        + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))
+        + ((e & hash[5]) ^ ((~e) & hash[6]))
+        + k[i]
+        + (w[i] = (i < 16) ? w[i] : (
+          w[i - 16]
+          + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))
+          + w[i - 7]
+          + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))
+        ) | 0);
+      const temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))
+        + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
+      hash.unshift((temp1 + temp2) | 0);
+      hash[4] = (hash[4] + temp1) | 0;
+      hash.pop();
+    }
+    for (i = 0; i < 8; i++) hash[i] = (hash[i] + oldHash[i]) | 0;
+  }
+  for (i = 0; i < 8; i++) {
+    for (j = 3; j + 1; j--) {
+      const b = (hash[i] >> (j * 8)) & 255;
+      result += ((b < 16) ? 0 : '') + b.toString(16);
+    }
+  }
+  return result;
 }
 
 async function sha256(str) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  try {
+    if (window.crypto && window.crypto.subtle && typeof TextEncoder !== 'undefined') {
+      const buf = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+  } catch (e) { }
+  return sha256Fallback(str);
 }
 
-function sortTags(tags = []) {
+function sortTags(tags) {
+  const list = Array.isArray(tags) ? tags : [];
   const unitTags = [];
   const otherTags = [];
-  tags.forEach(t => {
+  list.forEach(t => {
     const item = String(t).trim();
     if (/^\d+단원$/.test(item)) {
       unitTags.push(item);
@@ -376,11 +750,11 @@ function sortTags(tags = []) {
       otherTags.push(item);
     }
   });
-  unitTags.sort((a, b) => parseInt(a) - parseInt(b));
-  return [...unitTags, ...otherTags];
+  unitTags.sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+  return unitTags.concat(otherTags);
 }
 
-// ── 업로드된 동영상 파일에서 썸네일 프레임 자동 캡처 ──
+// ── 업로드된 동영상 파일에서 경량 썸네일 프레임 자동 캡처 (Firestore 1MB 제한 보호) ──
 function captureVideoFrame(file) {
   return new Promise((resolve) => {
     try {
@@ -396,15 +770,19 @@ function captureVideoFrame(file) {
 
       video.addEventListener('seeked', () => {
         try {
+          const rawW = video.videoWidth || 640;
+          const rawH = video.videoHeight || 360;
+          const maxW = 480;
+          const scale = rawW > maxW ? (maxW / rawW) : 1;
           const canvas = document.createElement('canvas');
-          canvas.width = video.videoWidth || 640;
-          canvas.height = video.videoHeight || 360;
+          canvas.width = Math.round(rawW * scale);
+          canvas.height = Math.round(rawH * scale);
           const ctx = canvas.getContext('2d');
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.65);
           URL.revokeObjectURL(objectUrl);
           resolve(dataUrl);
-        } catch(err) {
+        } catch (err) {
           URL.revokeObjectURL(objectUrl);
           resolve('');
         }
@@ -414,7 +792,7 @@ function captureVideoFrame(file) {
         URL.revokeObjectURL(objectUrl);
         resolve('');
       });
-    } catch(e) {
+    } catch (e) {
       resolve('');
     }
   });
@@ -432,8 +810,12 @@ function setSortBy(sortType) {
   renderCards();
 }
 
+function getOrderVal(song) {
+  return (song && typeof song.order === 'number') ? song.order : 0;
+}
+
 function getFilteredSongs() {
-  let songs = [...state.songs];
+  let songs = state.songs.slice();
 
   if (!state.isAdmin) {
     songs = songs.filter(s => !s.locked);
@@ -449,14 +831,14 @@ function getFilteredSongs() {
         const ua = getUnitNumber(a);
         const ub = getUnitNumber(b);
         if (ua !== ub) return ua - ub;
-        return (a.order ?? 0) - (b.order ?? 0);
+        return getOrderVal(a) - getOrderVal(b);
       });
       break;
     case 'title':
-      songs.sort((a, b) => a.title.localeCompare(b.title, 'ko'));
+      songs.sort((a, b) => String(a.title || '').localeCompare(String(b.title || ''), 'ko'));
       break;
     default:
-      songs.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      songs.sort((a, b) => getOrderVal(a) - getOrderVal(b));
   }
 
   return songs;
@@ -466,11 +848,11 @@ function getFilteredSongs() {
 // 6. RENDER HELPERS
 // ══════════════════════════════════════════════════════
 function renderGradeTabs() {
-  const nav    = document.getElementById('gradeNav');
+  const nav = document.getElementById('gradeNav');
   const mobile = document.getElementById('mobileGradeBar');
   if (!nav || !mobile) return;
 
-  nav.innerHTML    = '';
+  nav.innerHTML = '';
   mobile.innerHTML = '';
 
   state.grades.forEach(grade => {
@@ -488,7 +870,7 @@ function renderGradeTabs() {
 
     if (state.isAdmin) {
       const lockTitle = isAllLocked ? '전체 잠금 해제' : '전체 잠금';
-      const lockIcon  = isAllLocked
+      const lockIcon = isAllLocked
         ? `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`
         : `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>`;
 
@@ -554,19 +936,19 @@ function renderSidebarStats() {
   const el = document.getElementById('sidebarStats');
   if (!el) return;
   const visibleSongs = state.isAdmin ? state.songs : state.songs.filter(s => !s.locked);
-  const total      = visibleSongs.length;
+  const total = visibleSongs.length;
   const gradeCount = state.grades.filter(g => g !== '전체').length;
   el.innerHTML = `<strong>${total}</strong>개 과학송<br>${gradeCount}개 학년 운영 중`;
 }
 
 function renderPageTitle() {
-  const area  = document.getElementById('pageTitleArea');
+  const area = document.getElementById('pageTitleArea');
   if (!area) return;
   const grade = state.currentGrade;
 
   if (grade === '전체') {
     const visibleSongs = state.isAdmin ? state.songs : state.songs.filter(s => !s.locked);
-    const total    = visibleSongs.length;
+    const total = visibleSongs.length;
     const chipsHtml = state.grades
       .filter(g => g !== '전체')
       .map(g => {
@@ -628,20 +1010,21 @@ function renderPageTitle() {
 }
 
 function renderCards() {
-  const grid  = document.getElementById('cardsGrid');
+  const grid = document.getElementById('cardsGrid');
   const empty = document.getElementById('emptyState');
-  if (!grid || !empty) return;
+  if (!grid) return;
 
   const songs = getFilteredSongs();
   grid.innerHTML = '';
 
   if (songs.length === 0) {
-    empty.style.display = '';
-    grid.appendChild(empty);
+    grid.style.display = 'none';
+    if (empty) empty.style.display = '';
     return;
   }
 
-  empty.style.display = 'none';
+  grid.style.display = '';
+  if (empty) empty.style.display = 'none';
   songs.forEach((song, idx) => {
     grid.appendChild(createCardElement(song, idx));
   });
@@ -668,9 +1051,9 @@ function createCardElement(song, idx) {
   const sortedTags = sortTags(song.tags || []);
   const tagsHtml = !song.locked && sortedTags.length > 0
     ? sortedTags.map(t => {
-        const c = getTagColor(t);
-        return `<span class="card-tag" style="background:${c.bg};border-color:${c.border};color:${c.text}">#${escapeHtml(t)}</span>`;
-      }).join('')
+      const c = getTagColor(t);
+      return `<span class="card-tag" style="background:${c.bg};border-color:${c.border};color:${c.text}">#${escapeHtml(t)}</span>`;
+    }).join('')
     : '';
 
   const gradeBadge = !song.locked
@@ -694,9 +1077,9 @@ function createCardElement(song, idx) {
                title="${song.locked ? '잠금 해제' : '잠금'}"
                aria-label="${song.locked ? '잠금 해제' : '잠금'}">
          ${song.locked
-           ? `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`
-           : `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>`
-         }
+      ? `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`
+      : `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>`
+    }
        </button>`
     : '';
 
@@ -727,13 +1110,13 @@ function createCardElement(song, idx) {
     </div>
     <div class="card-body">
       ${song.locked
-        ? `<div class="card-locked-msg">
+      ? `<div class="card-locked-msg">
              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
              잠긴 콘텐츠
            </div>`
-        : `<div class="card-title">${escapeHtml(song.title)}</div>
+      : `<div class="card-title">${escapeHtml(song.title)}</div>
            <div class="card-tags">${gradeBadge}${tagsHtml}</div>`
-      }
+    }
     </div>
   `;
 
@@ -833,8 +1216,8 @@ async function verifyAdmin() {
 
 function enterAdmin() {
   state.isAdmin = true;
-  document.getElementById('adminBanner').style.display  = '';
-  document.getElementById('adminAddRow').style.display  = '';
+  document.getElementById('adminBanner').style.display = '';
+  document.getElementById('adminAddRow').style.display = '';
   document.getElementById('adminToggleBtn').innerHTML = `
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
     관리자 종료
@@ -879,10 +1262,10 @@ function setupSortable() {
     sortableInstance = Sortable.create(grid, {
       animation: 200,
       ghostClass: 'sortable-ghost',
-      dragClass:  'sortable-drag',
-      handle:     '.song-card',
+      dragClass: 'sortable-drag',
+      handle: '.song-card',
       onEnd() {
-        const cards    = grid.querySelectorAll('.song-card');
+        const cards = grid.querySelectorAll('.song-card');
         const newOrder = [...cards].map(c => c.dataset.id);
         newOrder.forEach((id, idx) => {
           const song = state.songs.find(s => s.id === id);
@@ -892,53 +1275,97 @@ function setupSortable() {
         showToast('순서가 변경되었습니다 ✓', 'success');
       }
     });
-  } catch(e) {}
+  } catch (e) { }
 }
 
 // ══════════════════════════════════════════════════════
-// 11. HYBRID PLAYER (YouTube & HTML5 Video)
+// 11. HYBRID PLAYER (YouTube, Google Drive, Direct & HTML5 Video)
 // ══════════════════════════════════════════════════════
 async function playSong(song) {
   if (state.isAdmin) return;
   if (song.locked) { showToast('잠긴 과학송입니다 🔒', 'warn'); return; }
 
   const youtubeIframe = document.getElementById('youtubeIframe');
-  const videoPlayer   = document.getElementById('html5VideoPlayer');
-  const isFileMedia   = song.mediaType === 'file' || song.hasVideoFile;
+  const videoPlayer = document.getElementById('html5VideoPlayer');
+  const errorBox = document.getElementById('playerErrorBox');
+  const isFileMedia = song.mediaType === 'file' || song.hasVideoFile;
 
   if (currentVideoObjectUrl) {
     URL.revokeObjectURL(currentVideoObjectUrl);
     currentVideoObjectUrl = null;
   }
 
+  if (errorBox) {
+    errorBox.style.display = 'none';
+    errorBox.innerHTML = '';
+  }
+
+  let externalUrl = '';
+  let externalLabel = '새 창에서 영상 열기 ↗';
+
   if (isFileMedia) {
-    // 📁 자체 업로드 동영상 재생 (광고 0% HTML5 플레이어)
+    // 📁 자체 업로드 동영상 재생 (로컬 IndexedDB)
     youtubeIframe.style.display = 'none';
     youtubeIframe.src = '';
-    videoPlayer.style.display = 'block';
 
     const blob = await getVideoBlob(song.id);
     if (!blob) {
-      showToast('이 기기에서 등록된 영상 파일을 찾을 수 없습니다.', 'error');
-      return;
+      videoPlayer.pause();
+      videoPlayer.src = '';
+      videoPlayer.style.display = 'none';
+      if (errorBox) {
+        errorBox.style.display = 'flex';
+        errorBox.innerHTML = `
+          <h3>📁 이 기기에서 영상 파일을 찾을 수 없어요</h3>
+          <p>직접 업로드한 영상 파일은 업로드한 PC 브라우저에만 저장됩니다.<br>전자칠판이나 다른 기기에서도 재생하려면 영상을 <strong>YouTube(일부 공개)</strong> 또는 <strong>구글 드라이브 공유 링크</strong>로 등록해 주세요.</p>
+        `;
+      } else {
+        showToast('이 기기에서 등록된 영상 파일을 찾을 수 없습니다.', 'error');
+        return;
+      }
+    } else {
+      videoPlayer.style.display = 'block';
+      currentVideoObjectUrl = URL.createObjectURL(blob);
+      videoPlayer.src = currentVideoObjectUrl;
+      videoPlayer.play().catch(() => { });
     }
-    currentVideoObjectUrl = URL.createObjectURL(blob);
-    videoPlayer.src = currentVideoObjectUrl;
-    videoPlayer.play().catch(() => {});
   } else {
-    // 🎬 YouTube 임베드 재생 (광고 최소화 도메인 적용)
     videoPlayer.pause();
     videoPlayer.src = '';
     videoPlayer.style.display = 'none';
-    youtubeIframe.style.display = 'block';
 
-    const videoId = song.videoId || extractVideoId(song.youtubeUrl);
-    if (!videoId) {
-      if (song.youtubeUrl) window.open(song.youtubeUrl, '_blank');
-      else showToast('재생할 영상 정보가 없습니다.', 'error');
+    const rawUrl = (song.youtubeUrl || '').trim();
+    const videoId = song.videoId || extractVideoId(rawUrl);
+    const driveId = extractGoogleDriveId(rawUrl);
+
+    if (videoId) {
+      // 🎬 YouTube 임베드 재생 (전자칠판 호환 표준 임베드)
+      youtubeIframe.style.display = 'block';
+      youtubeIframe.src = getYoutubeEmbedUrl(videoId);
+      externalUrl = rawUrl || ('https://www.youtube.com/watch?v=' + encodeURIComponent(videoId));
+      externalLabel = 'YouTube에서 바로 보기 ↗';
+    } else if (driveId) {
+      // ☁️ 구글 드라이브 영상 임베드 재생
+      youtubeIframe.style.display = 'block';
+      youtubeIframe.src = 'https://drive.google.com/file/d/' + encodeURIComponent(driveId) + '/preview';
+      externalUrl = rawUrl;
+      externalLabel = '구글 드라이브에서 열기 ↗';
+    } else if (isDirectVideoUrl(rawUrl)) {
+      // 🎞️ 직링크 MP4/WebM 재생
+      youtubeIframe.style.display = 'none';
+      youtubeIframe.src = '';
+      videoPlayer.style.display = 'block';
+      videoPlayer.src = rawUrl;
+      videoPlayer.play().catch(() => { });
+      externalUrl = rawUrl;
+      externalLabel = '영상 원본 열기 ↗';
+    } else if (rawUrl) {
+      window.open(rawUrl, '_blank');
+      return;
+    } else {
+      showToast('재생할 영상 정보가 없습니다.', 'error');
       return;
     }
-    youtubeIframe.src = getYoutubeEmbedUrl(videoId);
   }
 
   document.getElementById('playerModalTitle').textContent = song.title;
@@ -949,11 +1376,20 @@ async function playSong(song) {
     return `<span class="card-tag" style="background:${c.bg};border-color:${c.border};color:${c.text}">#${escapeHtml(t)}</span>`;
   }).join('');
 
+  const externalBtnHtml = externalUrl
+    ? `<a class="player-external-btn" href="${escapeHtml(externalUrl)}" target="_blank" rel="noopener noreferrer">${externalLabel}</a>`
+    : '';
+
   document.getElementById('playerInfo').innerHTML = `
-    <div class="player-song-title">${escapeHtml(song.title)}</div>
-    <div class="player-tags">
-      <span class="card-grade-badge" style="margin-right:4px;">${escapeHtml(song.grade)}</span>
-      ${tagsHtml}
+    <div class="player-info-header">
+      <div>
+        <div class="player-song-title">${escapeHtml(song.title)}</div>
+        <div class="player-tags">
+          <span class="card-grade-badge" style="margin-right:4px;">${escapeHtml(song.grade)}</span>
+          ${tagsHtml}
+        </div>
+      </div>
+      ${externalBtnHtml}
     </div>
   `;
 
@@ -962,11 +1398,16 @@ async function playSong(song) {
 
 function closePlayer() {
   const youtubeIframe = document.getElementById('youtubeIframe');
-  const videoPlayer   = document.getElementById('html5VideoPlayer');
+  const videoPlayer = document.getElementById('html5VideoPlayer');
+  const errorBox = document.getElementById('playerErrorBox');
   if (youtubeIframe) youtubeIframe.src = '';
   if (videoPlayer) {
     videoPlayer.pause();
     videoPlayer.src = '';
+  }
+  if (errorBox) {
+    errorBox.style.display = 'none';
+    errorBox.innerHTML = '';
   }
   if (currentVideoObjectUrl) {
     URL.revokeObjectURL(currentVideoObjectUrl);
@@ -987,19 +1428,19 @@ function setMediaType(type) {
 }
 
 function openAddModal() {
-  state.editingId          = null;
-  state.currentTags        = [];
-  state.selectedVideoFile  = null;
-  state.selectedThumbData  = '';
+  state.editingId = null;
+  state.currentTags = [];
+  state.selectedVideoFile = null;
+  state.selectedThumbData = '';
 
-  document.getElementById('songModalTitle').textContent      = '과학송 추가';
-  document.getElementById('deleteSongBtn').style.display    = 'none';
-  document.getElementById('songYoutubeUrl').value           = '';
-  document.getElementById('songTitle').value                = '';
-  document.getElementById('customYoutubeThumbUrl').value    = '';
+  document.getElementById('songModalTitle').textContent = '과학송 추가';
+  document.getElementById('deleteSongBtn').style.display = 'none';
+  document.getElementById('songYoutubeUrl').value = '';
+  document.getElementById('songTitle').value = '';
+  document.getElementById('customYoutubeThumbUrl').value = '';
   document.getElementById('selectedFileInfo').style.display = 'none';
   document.getElementById('thumbPreviewArea').style.display = 'none';
-  document.getElementById('thumbPreviewImg').src            = '';
+  document.getElementById('thumbPreviewImg').src = '';
 
   setMediaType('youtube');
   renderTagList();
@@ -1012,15 +1453,15 @@ function openEditModal(id) {
   const song = state.songs.find(s => s.id === id);
   if (!song) return;
 
-  state.editingId          = id;
-  state.currentTags        = [...(song.tags || [])];
-  state.selectedVideoFile  = null;
-  state.selectedThumbData  = song.thumbnail || '';
+  state.editingId = id;
+  state.currentTags = [...(song.tags || [])];
+  state.selectedVideoFile = null;
+  state.selectedThumbData = song.thumbnail || '';
 
-  document.getElementById('songModalTitle').textContent   = '과학송 편집';
+  document.getElementById('songModalTitle').textContent = '과학송 편집';
   document.getElementById('deleteSongBtn').style.display = '';
-  document.getElementById('songYoutubeUrl').value        = song.youtubeUrl || '';
-  document.getElementById('songTitle').value             = song.title || '';
+  document.getElementById('songYoutubeUrl').value = song.youtubeUrl || '';
+  document.getElementById('songTitle').value = song.title || '';
   document.getElementById('customYoutubeThumbUrl').value = '';
 
   const isFileMedia = song.mediaType === 'file' || song.hasVideoFile;
@@ -1035,7 +1476,7 @@ function openEditModal(id) {
   }
 
   if (song.thumbnail) {
-    document.getElementById('thumbPreviewImg').src             = song.thumbnail;
+    document.getElementById('thumbPreviewImg').src = song.thumbnail;
     document.getElementById('thumbPreviewArea').style.display = '';
   } else {
     document.getElementById('thumbPreviewArea').style.display = 'none';
@@ -1108,19 +1549,19 @@ function fetchCustomYoutubeThumb() {
 }
 
 function fetchYoutubeThumbnail() {
-  const url     = document.getElementById('songYoutubeUrl').value.trim();
+  const url = document.getElementById('songYoutubeUrl').value.trim();
   const videoId = extractVideoId(url);
   if (!videoId) { showToast('올바른 YouTube URL을 입력해 주세요.', 'error'); return; }
   const thumb = getYoutubeThumbnail(videoId);
   state.selectedThumbData = thumb;
-  document.getElementById('thumbPreviewImg').src             = thumb;
+  document.getElementById('thumbPreviewImg').src = thumb;
   document.getElementById('thumbPreviewArea').style.display = '';
   showToast('썸네일을 가져왔습니다 ✓', 'success');
 }
 
 function clearThumbnail() {
   state.selectedThumbData = '';
-  document.getElementById('thumbPreviewImg').src             = '';
+  document.getElementById('thumbPreviewImg').src = '';
   document.getElementById('thumbPreviewArea').style.display = 'none';
 }
 
@@ -1170,7 +1611,7 @@ async function saveSong() {
     videoId = extractVideoId(url) || '';
   }
 
-  const thumbSrc  = document.getElementById('thumbPreviewImg').src || state.selectedThumbData || '';
+  const thumbSrc = document.getElementById('thumbPreviewImg').src || state.selectedThumbData || '';
   const thumbnail = (thumbSrc && !thumbSrc.endsWith('undefined') && thumbSrc !== window.location.href)
     ? thumbSrc
     : (videoId ? getYoutubeThumbnail(videoId) : '');
@@ -1202,7 +1643,7 @@ async function saveSong() {
     }
     showToast(`"${title}" 수정 완료 ✓`, 'success');
   } else {
-    const maxOrder = state.songs.reduce((m, s) => Math.max(m, s.order ?? 0), -1);
+    const maxOrder = state.songs.reduce((m, s) => Math.max(m, getOrderVal(s)), -1);
     state.songs.push({
       id: songId,
       title,
@@ -1247,7 +1688,7 @@ function handleTagInput(e) {
 
 function addTagFromInput() {
   const input = document.getElementById('songTagInput');
-  const val   = input.value.trim().replace(/,+$/, '').trim();
+  const val = input.value.trim().replace(/,+$/, '').trim();
   if (!val) return;
   if (!state.currentTags.includes(val)) { state.currentTags.push(val); renderTagList(); }
   input.value = '';
@@ -1296,7 +1737,7 @@ function renderGradeManageList() {
 
 function addGrade() {
   const input = document.getElementById('newGradeInput');
-  const val   = input.value.trim();
+  const val = input.value.trim();
   if (!val) return;
   if (state.grades.includes(val)) { showToast('이미 존재하는 학년입니다.', 'warn'); return; }
   state.grades.push(val);
@@ -1327,68 +1768,59 @@ function removeGrade(grade) {
 // 15. DATA & CLOUD MANAGEMENT
 // ══════════════════════════════════════════════════════
 function openDataModal() {
-  const savedConfig = localStorage.getItem(FIREBASE_CONFIG_KEY);
-  let activeConfig = DEFAULT_FIREBASE_CONFIG;
-  if (savedConfig) {
-    try { activeConfig = JSON.parse(savedConfig); } catch(e) {}
-  }
+  const activeConfig = getActiveFirebaseConfig();
   const configInput = document.getElementById('firebaseConfigInput');
   if (configInput) {
     configInput.value = JSON.stringify(activeConfig, null, 2);
   }
-  updateCloudBadge(firestoreDb ? 'connected' : 'local');
+  const headerBtn = document.getElementById('headerSyncBtn');
+  const isSynced = firestoreDb || (headerBtn && headerBtn.classList.contains('is-synced'));
+  updateCloudBadge(isSynced ? 'connected' : 'local');
   openModal('dataModal');
 }
 
 async function syncLocalToCloudNow() {
-  if (!firestoreDb) {
-    showToast('클라우드에 연결하는 중...', '');
-    initFirebaseSync();
-  }
-  if (!firestoreDb) {
-    showToast('클라우드 연결을 확인해 주세요.', 'error');
-    return;
-  }
   showToast('클라우드로 전체 데이터를 전송하는 중...', '');
-  await saveToCloud({
+  const ok = await saveToCloud({
     grades: state.grades,
     songs: state.songs,
     updatedAt: Date.now()
   });
-  showToast('☁️ 현재 목록이 클라우드에 저장되었습니다! 이제 핸드폰이나 다른 기기에서도 똑같이 보입니다 ✓', 'success');
+  if (ok) {
+    showToast('☁️ 현재 목록이 클라우드에 저장되었습니다! 이제 전자칠판·스마트폰 등 모든 기기에서도 똑같이 보입니다 ✓', 'success');
+  }
 }
 
 async function syncCloudToLocalNow() {
-  if (!firestoreDb) {
-    initFirebaseSync();
-  }
-  if (!firestoreDb) {
-    showToast('클라우드 연결을 확인해 주세요.', 'error');
-    return;
-  }
+  showToast('클라우드에서 최신 데이터를 불러오는 중...', '');
   try {
-    const doc = await firestoreDb.collection('archive').doc('main').get();
-    if (doc.exists) {
-      const remoteData = doc.data();
-      if (remoteData && remoteData.songs && Array.isArray(remoteData.songs)) {
-        state.songs = remoteData.songs.map((s, idx) => ({
-          locked: false,
-          order: s.order ?? idx,
-          mediaType: s.mediaType || (s.videoId || s.youtubeUrl ? 'youtube' : 'file'),
-          ...s
-        }));
-        if (remoteData.grades && Array.isArray(remoteData.grades)) {
-          state.grades = remoteData.grades;
+    if (firestoreDb) {
+      const doc = await firestoreDb.collection('archive').doc('main').get();
+      if (doc.exists) {
+        const remoteData = doc.data();
+        if (remoteData && Array.isArray(remoteData.songs)) {
+          hasUnsyncedLocal = false;
+          applyRemoteData(remoteData);
+          updateCloudBadge('connected');
+          showToast('🔄 클라우드에서 최신 데이터 ' + state.songs.length + '곡을 가져왔습니다 ✓', 'success');
+          return;
         }
-        saveState(true);
-        renderAll();
-        showToast('🔄 클라우드에서 최신 데이터를 가져왔습니다 ✓', 'success');
       }
-    } else {
-      showToast('클라우드에 저장된 데이터가 없습니다.', 'warn');
     }
-  } catch(e) {
-    showToast('데이터 가져오기 오류: ' + e.message, 'error');
+    hasUnsyncedLocal = false;
+    const ok = await fetchFromCloudRest();
+    if (ok) {
+      showToast('🔄 클라우드에서 최신 데이터 ' + state.songs.length + '곡을 가져왔습니다 ✓', 'success');
+    } else {
+      showToast('클라우드에 저장된 데이터를 가져오지 못했습니다.', 'warn');
+    }
+  } catch (e) {
+    const ok = await fetchFromCloudRest();
+    if (ok) {
+      showToast('🔄 클라우드에서 최신 데이터 ' + state.songs.length + '곡을 가져왔습니다 ✓', 'success');
+    } else {
+      showToast('데이터 가져오기 오류: ' + e.message, 'error');
+    }
   }
 }
 
@@ -1397,14 +1829,14 @@ function exportDataJson() {
     grades: state.grades,
     songs: state.songs,
     exportedAt: new Date().toISOString(),
-    version: '2.2'
+    version: APP_VERSION.replace(/^v/, '')
   };
   const jsonStr = JSON.stringify(data, null, 2);
   const blob = new Blob([jsonStr], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `science_songs_backup_${new Date().toISOString().slice(0,10)}.json`;
+  a.download = `science_songs_backup_${new Date().toISOString().slice(0, 10)}.json`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -1417,7 +1849,7 @@ function copyDataJson() {
     grades: state.grades,
     songs: state.songs,
     exportedAt: new Date().toISOString(),
-    version: '2.2'
+    version: APP_VERSION.replace(/^v/, '')
   };
   const jsonStr = JSON.stringify(data, null, 2);
   navigator.clipboard.writeText(jsonStr).then(() => {
@@ -1445,7 +1877,7 @@ function importDataFromFile(e) {
       const parsed = JSON.parse(event.target.result);
       applyImportedData(parsed);
       e.target.value = '';
-    } catch(err) {
+    } catch (err) {
       showToast('올바른 JSON 파일 형식이 아닙니다.', 'error');
     }
   };
@@ -1463,7 +1895,7 @@ function importDataFromText() {
     applyImportedData(parsed);
     document.getElementById('importJsonText').value = '';
     document.getElementById('pasteImportArea').style.display = 'none';
-  } catch(err) {
+  } catch (err) {
     showToast('올바른 JSON 형식이 아닙니다.', 'error');
   }
 }
@@ -1484,24 +1916,10 @@ function applyImportedData(data) {
     return;
   }
 
-  state.songs = importedSongs.map((s, idx) => ({
-    id: s.id || uid(),
-    title: s.title || '제목 없음',
-    grade: s.grade || '중1',
-    mediaType: s.mediaType || (s.videoId || s.youtubeUrl ? 'youtube' : 'file'),
-    youtubeUrl: s.youtubeUrl || '',
-    videoId: s.videoId || extractVideoId(s.youtubeUrl) || '',
-    videoFileName: s.videoFileName || '',
-    videoFileSize: s.videoFileSize || '',
-    hasVideoFile: !!s.hasVideoFile,
-    thumbnail: s.thumbnail || (s.videoId ? getYoutubeThumbnail(s.videoId) : ''),
-    tags: Array.isArray(s.tags) ? s.tags : [],
-    order: s.order ?? idx,
-    locked: !!s.locked
-  }));
+  state.songs = importedSongs.map((s, idx) => normalizeSongItem(s, idx));
 
   if (importedGrades && importedGrades.length > 0) {
-    state.grades = importedGrades.includes('전체') ? importedGrades : ['전체', ...importedGrades];
+    state.grades = importedGrades.indexOf('전체') !== -1 ? importedGrades : ['전체'].concat(importedGrades);
   }
 
   saveState();
@@ -1513,7 +1931,7 @@ function applyImportedData(data) {
 function resetToDefaultData() {
   if (!confirm('정말 기본 예시 데이터로 초기화할까요?\n수정하거나 추가한 모든 데이터가 처음 상태로 되돌아갑니다.')) return;
   state.grades = [...DEFAULT_GRADES];
-  state.songs  = DEFAULT_SONGS.map(s => ({ ...s, locked: false }));
+  state.songs = DEFAULT_SONGS.map(s => ({ ...s, locked: false }));
   saveState();
   renderAll();
   showToast('기본 데이터로 초기화되었습니다.', 'warn');
@@ -1541,7 +1959,7 @@ function saveFirebaseConfig() {
     initFirebaseSync();
     saveToCloud({ grades: state.grades, songs: state.songs, updatedAt: Date.now() });
     showToast('Firebase 클라우드 연동 성공! 실시간 동기화가 활성화되었습니다 ✓', 'success');
-  } catch(e) {
+  } catch (e) {
     showToast('설정 파싱 오류: 올바른 JSON 또는 객체 형식인지 확인해 주세요.', 'error');
   }
 }
@@ -1646,21 +2064,32 @@ function renderAll() {
     renderSidebarStats();
     renderPageTitle();
     renderCards();
-  } catch(err) {
+  } catch (err) {
     console.error('렌더링 중 오류 발생:', err);
   }
 }
 
+function syncFooterVersion() {
+  document.querySelectorAll('.f-ver').forEach(el => {
+    el.textContent = APP_VERSION;
+  });
+}
+
 function init() {
   try {
+    syncFooterVersion();
     loadState();
     setupYoutubeUrlAutoThumb();
     setupFileDropzone();
-    initFirebaseSync();
-  } catch(e) {
+  } catch (e) {
     console.warn('초기화 단계 경고:', e);
   } finally {
     renderAll();
+    try {
+      initFirebaseSync();
+    } catch (err) {
+      console.warn('클라우드 동기화 시작 경고:', err);
+    }
   }
 }
 
